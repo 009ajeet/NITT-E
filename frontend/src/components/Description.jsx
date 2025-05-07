@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import "./description.css";
+import "./Description.css";
 
 const Description = () => {
   const { courseId } = useParams();

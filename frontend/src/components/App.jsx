@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "../context/authContext";
 import Home from "./Home";
 import Login from "./Login";
+import NewNotice from './newNotice';
 import Register from "./Register";
 import Courses from "./courses";
 import DataScience from "./DataScience";
@@ -22,7 +23,7 @@ import VerificationOfficerDashboard from "./VerificationOfficerDashboard";
 import ApplicationForm from "./ApplicationForm";
 import ChangePassword from "./ChangePassword";
 import NewNotice from "./newNotice";
-import AdminDetails from "./AdminDetails"; 
+import AdminDetails from "./AdminDetails";
 import Payment from "./Payment";
 import RoleCreation from "./RoleCreation";
 
@@ -86,7 +87,7 @@ function App() {
           {/* Verification Admin and Officer */}
           <Route path="/verification-admin" element={<VerificationAdminDashboard />} />
           <Route path="/verification-officer" element={<VerificationOfficerDashboard />} />
-          
+
           {/* Application Form */}
           <Route path="/application/:courseId" element={<ApplicationForm />} />
 

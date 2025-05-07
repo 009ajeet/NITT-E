@@ -35,14 +35,31 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 
 // Configure CORS for both development and production
-app.use(
-  cors({
-    // Use config for origin to support both development and production
-    origin: config.clientURL || "http://localhost:5173",
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    credentials: true,
-  })
-);
+app.use((req, res, next) => {
+  // Set CORS headers on each response
+  const allowedOrigins = [
+    "https://nitt-e-fronted.onrender.com",
+    "https://nitt-e.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000"
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204); // No content for preflight requests
+  }
+
+  next();
+});
+
 app.options("*", cors());
 
 // Request logging middleware
@@ -86,6 +103,29 @@ app.use("/api/verification-officer", verificationOfficerRoutes);
 
 // Serve static files from the uploads directory
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add CORS headers again for static files
+// Add CORS headers for static files
+app.use('/api/uploads', (req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    "https://nitt-e-fronted.onrender.com",
+    "https://nitt-e.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000"
+  ];
+
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'https://nitt-e-fronted.onrender.com');
+  }
+
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  next();
+});
 
 // Log registered routes (optional)
 console.log("Registered Routes:");
@@ -395,8 +435,19 @@ app.put("/change-password", auth, async (req, res) => {
   }
 });
 
+// Add health check endpoint for Render
+// Root endpoint for browser testing
+app.get("/", (req, res) => {
+  res.status(200).json({
+    message: "NITT-ECAMPUS API Server",
+    status: "online",
+    cors: "enabled",
+    time: new Date().toISOString()
+  });
+});
+
 // Use port from config with fallback to 3001
 const PORT = config.port || 3001;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

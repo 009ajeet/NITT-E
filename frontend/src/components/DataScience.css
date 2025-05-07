@@ -1,0 +1,123 @@
+/* DataScience.css */
+.course-container {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background: white;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+  
+  /* Course Header */
+  .course-header {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .course-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .course-details {
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 10px;
+  }
+  
+  /* Impact Section */
+  .impact-section {
+    margin-top: 30px;
+  }
+  
+  .impact-section h2 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .impact-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 15px;
+  }
+  
+  .impact-card {
+    width: 40%;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .impact-card h3 {
+    font-size: 1.3rem;
+    color: #007bff;
+  }
+  
+  .impact-card p {
+    color: #444;
+  }
+  
+  /* Benefits Section */
+  .benefits-section {
+    margin-top: 30px;
+  }
+  
+  .benefits-section h2 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .benefit-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 15px;
+  }
+  
+  .benefit-card {
+    width: 40%;
+    background: #eef5ff;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  .benefit-card h3 {
+    font-size: 1.3rem;
+    color: #28a745;
+  }
+  
+  .benefit-card p {
+    color: #444;
+  }
+  
+  /* Syllabus Section */
+  .syllabus-section {
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .syllabus-button {
+    background: #007bff;
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  
+  .syllabus-button:hover {
+    background: #0056b3;
+  }
+  

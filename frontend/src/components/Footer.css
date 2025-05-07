@@ -1,0 +1,98 @@
+/* Ensure the entire page takes at least the full height of the viewport */
+body, html {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Make the main content push the footer down */
+.main-content {
+  flex-grow: 1;
+}
+
+/* Footer Styling */
+.footer {
+  background: linear-gradient(135deg, #022462, #042155);
+  color: #ecf0f1;
+  padding: 4rem 0;
+  font-family: "Plus Jakarta Sans", serif !important;
+  border-top: 1px solid #ddd;
+  margin-top: auto; /* Pushes footer to the bottom when needed */
+  width: 100%;
+}
+
+/* Footer Content */
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.footer-section {
+  flex: 1;
+  margin: 0 1rem;
+  min-width: 250px;
+}
+
+.footer-section h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #007bff;
+}
+
+.footer-section p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.footer-section ul li a:hover {
+  text-decoration: underline;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 2rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.footer-section a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.footer-section a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+  }
+
+  .footer-section {
+    margin-bottom: 1.5rem;
+  }
+}

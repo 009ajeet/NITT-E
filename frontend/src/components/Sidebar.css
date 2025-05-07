@@ -1,0 +1,44 @@
+/* Sidebar Styling */
+.sidebar {
+    width: 250px;  /* Fixed width */
+    height: 100vh; /* Full height */
+    background: #022462;
+    color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    padding: 20px;
+    overflow-y: auto;  /* Enables scrolling if content exceeds */
+  }
+  
+  /* Main Content should shift right to make space for Sidebar */
+  .main-content {
+    margin-left: 250px;  /* Same as Sidebar width */
+    padding: 20px;
+    width: calc(100% - 250px);  /* Ensures responsive width */
+    transition: margin-left 0.3s ease-in-out;
+  }
+  
+  /* Responsive Sidebar */
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 200px;
+    }
+    .main-content {
+      margin-left: 200px;
+      width: calc(100% - 200px);
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .sidebar {
+      width: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .main-content {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+  

@@ -1,0 +1,36 @@
+.admin-details {
+    max-width: 600px;
+    margin: 100px auto 20px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .admin-details h2 {
+    text-align: center;
+  }
+  
+  .admin-details p {
+    font-size: 18px;
+    margin: 10px 0;
+  }
+  
+  .btn-secondary {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #e68900;
+  }
+  .admin-details-container {
+    padding-top: 100px; 
+  }
+  

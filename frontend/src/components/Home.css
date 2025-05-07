@@ -1,0 +1,240 @@
+/* Container that wraps the entire home page content */
+.home-container {
+  background-color: rgb(253, 255, 255);
+  min-height: calc(100vh - 120px); /* Adjust based on your navbar + footer height */
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2rem; /* Optional: adds breathing space above footer */
+}
+
+/* ===== HERO SECTION ===== */
+.hero-section {
+  text-align: center;
+  background: linear-gradient(135deg, #022462, #2a5298);
+  color: #ffffff;
+  padding: 40px 20px;
+  font-family: "Plus Jakarta Sans", serif !important;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.hero-section h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.hero-section p {
+  font-size: 1.2rem;
+  font-weight: 300;
+  opacity: 0.9;
+  letter-spacing: 1px;
+}
+
+/* ===== MOVING TEXT ===== */
+.moving-text-wrapper {
+  height: 30px;
+  overflow: hidden;
+  white-space: nowrap;
+  background: #d3dbed;
+  position: relative;
+}
+
+.moving-text {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  animation: marquee 30s linear infinite;
+  white-space: nowrap; 
+  cursor: pointer;
+}
+
+.moving-text:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ===== IMAGE SLIDESHOW ===== */
+.image-slideshow img {
+  height: 22em;
+  width: 50em;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .image-slideshow img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* ===== NOTICE BOARD & STUDENT CORNER ===== */
+.notice-board, .student-corner {
+  border: 1px solid #c8c5c5;
+  border-radius: 5px;
+  background-color: #ffffff;
+  box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+  overflow: hidden;
+  flex: 1; /* Helps these sections grow if needed */
+}
+
+/* Headers (Notice & Student Corner) */
+.mainhead {
+  background-color: lightblue;
+  padding: 15px 20px;
+  margin-bottom: 0;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  text-align: center;
+  width: 100%;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Arial", sans-serif;
+  font-weight: bold;
+  margin: 0;
+}
+
+.section-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 20px;
+  margin-right: 10px;
+}
+
+/* Notice & Student Lists */
+.notice-list, .student-list {
+  background: #fff;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding: 15px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.notice-item, .student-item {
+  text-decoration: none;
+  color: #333;
+  font-size: 14px;
+  padding: 10px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+}
+
+.notice-item:last-child,
+.student-item:last-child {
+  border-bottom: none;
+}
+
+.notice-item a, .student-item a {
+  flex-grow: 1;
+  color: #000;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.notice-item a:hover,
+.student-item a:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+/* Notice and Student GIFs */
+.notice-list img,
+.student-list img {
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+}
+
+/* ===== Buttons in Notice Board ===== */
+.notice-board .btn-group button {
+  margin-left: 5px;
+  padding: 3px 8px;
+}
+
+.notice-board .btn-group {
+  display: flex;
+  gap: 5px;
+}
+
+/* ===== Apply Now Bar ===== */
+.apply-now-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  background: #d3dbed;
+  position: relative;
+  text-align: center;
+}
+
+.apply-now-text {
+  display: inline-block;
+  font-size: 20px;
+  font-weight: bold;
+  color: rgb(234, 16, 16);
+  text-decoration: none;
+  animation: marqueeApply 12s linear infinite;
+}
+
+.apply-now-text:hover {
+  animation-play-state: paused;
+  color: blue;
+}
+
+.apply-now-text img {
+  height: 30px;
+  width: 30px;
+}
+
+@keyframes marqueeApply {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ===== ABOUT SECTION ===== */
+.about-section {
+  background-color: lightblue;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 2rem;
+}
+
+.about-image {
+  max-height: 250px;
+  border-radius: 10px;
+  width: 100%;
+  object-fit: cover;
+}
+
+/* ===== Responsive Fixes ===== */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero-section p {
+    font-size: 1rem;
+  }
+
+  .notice-board, .student-corner {
+    margin-bottom: 1rem;
+  }
+
+  .apply-now-text {
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,27 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Env
+.env
+*.env
+
+# Build outputs
+build/
+dist/
+.cache/
+
+# Sensitive or OS-specific
+.DS_Store
+Thumbs.db

@@ -1,0 +1,165 @@
+/* Existing styles remain unchanged */
+.content-admin-description {
+  max-width: 800px;
+  margin-top: 100px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.content-admin-description h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.form-group textarea,
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+.uploaded-image {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+}
+
+.syllabus-semester {
+  margin-bottom: 15px;
+}
+
+.syllabus-semester input {
+  margin-bottom: 10px;
+}
+
+/* Styles for Modify Form */
+.modify-form-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: #ffffff;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.modify-form-section h4 {
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  color: #333;
+}
+
+.modify-form-section h5 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  color: #555;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-item label {
+  font-size: 1rem;
+  color: #333;
+}
+
+.academic-field {
+  margin-bottom: 15px;
+}
+
+.subfields {
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+.subfield-item {
+  margin-bottom: 5px;
+}
+
+.add-field-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.add-field-input,
+.add-field-select {
+  flex: 1;
+  padding: 8px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.add-field-button {
+  padding: 8px 15px;
+  font-size: 1rem;
+}
+
+.submit-modified-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.submit-modified-button:hover {
+  background-color: #218838;
+}
+
+/* New styles for alert pop-up */
+.alert-popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  font-size: 1rem;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}

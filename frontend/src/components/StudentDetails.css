@@ -1,0 +1,37 @@
+.student-details {
+    max-width: 600px;
+    margin: 80px auto 20px;  /* Adjust margin to avoid overlapping with header */
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .student-details h2 {
+    text-align: center;
+  }
+  
+  .student-details p {
+    font-size: 18px;
+    margin: 10px 0;
+  }
+  
+  .btn-secondary {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #0056b3;
+  }
+  
+  .page-container {
+    padding-top: 100px;  /* Ensures the content moves below the header */
+  }
+  

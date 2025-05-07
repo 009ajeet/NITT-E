@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useAuth } from "../context/authContext";
 import Home from "./Home";
 import Login from "./Login";
-import NewNotice from './newNotice';
 import Register from "./Register";
 import Courses from "./courses";
 import DataScience from "./DataScience";

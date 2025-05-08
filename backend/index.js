@@ -42,7 +42,10 @@ const corsOptions = {
       "https://nitt-e.onrender.com",
       "http://localhost:5173",
       "http://localhost:3000",
-      "http://localhost:3001"
+      "http://localhost:3001",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001"
     ];
     
     console.log('Request origin:', origin);
@@ -77,7 +80,10 @@ app.options('*', (req, res) => {
     "https://nitt-e.onrender.com",
     "http://localhost:5173",
     "http://localhost:3000",
-    "http://localhost:3001"
+    "http://localhost:3001",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001"
   ];
 
   if (origin && allowedOrigins.includes(origin)) {

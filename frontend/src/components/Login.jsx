@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { useAuth } from "../context/authContext"; // Assuming you have this context for authentication
+import API_BASE_URL from '../config';
 import './Login.css';
 
 const Login = () => {
@@ -17,7 +18,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:3001/login', { email, password });
+            const res = await axios.post(`${API_BASE_URL}/login`, { email, password });
 
             // Destructure token, userId, and role from the response
             const { token, userId, role } = res.data;

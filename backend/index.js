@@ -35,32 +35,36 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 
 // Configure CORS for both development and production
-app.use((req, res, next) => {
-  // Set CORS headers on each response
-  const allowedOrigins = [
-    "https://nitt-e-fronted.onrender.com",
-    "https://nitt-e.onrender.com",
-    "http://localhost:5173",
-    "http://localhost:3000"
-  ];
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "https://nitt-e-fronted.onrender.com",
+      "https://nitt-e.onrender.com",
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
+};
 
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(204); // No content for preflight requests
-  }
-
-  next();
-});
-app.use(cors());
-app.options("*", cors());
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Request logging middleware
 app.use((req, res, next) => {

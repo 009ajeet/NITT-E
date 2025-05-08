@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import "./courses.css";
+import API_BASE_URL from '../config';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -29,7 +30,7 @@ const Courses = () => {
     }
 
     // Fetch courses (backend filters for content admins)
-    fetch("http://127.0.0.1:3001/api/courses", {
+    fetch(`${API_BASE_URL}/api/courses`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -87,7 +88,7 @@ const Courses = () => {
       return;
     }
 
-    fetch(`http://127.0.0.1:3001/api/courses/${editCourse._id}`, {
+    fetch(`${API_BASE_URL}/api/courses/${editCourse._id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -127,7 +128,7 @@ const Courses = () => {
   const handleDelete = (courseId) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
 
-    fetch(`http://127.0.0.1:3001/api/courses/${courseId}`, {
+    fetch(`${API_BASE_URL}/api/courses/${courseId}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import "./Description.css";
+import API_BASE_URL from '../config';
 
 const Description = () => {
   const { courseId } = useParams();
@@ -9,7 +10,11 @@ const Description = () => {
 
   useEffect(() => {
     axios
-      .get(`http://127.0.0.1:3001/api/courses/${courseId}`)
+      .get(`${API_BASE_URL}/api/courses/${courseId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
       .then((response) => setCourse(response.data))
       .catch((err) => console.error("Error fetching course description:", err));
   }, [courseId]);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
+import API_BASE_URL from '../config';
 
 const NewNotice = () => {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ const NewNotice = () => {
       if (id) {
         // Update existing notice
         const res = await axios.put(
-          `http://localhost:3001/api/notices/${id}`,
+          `${API_BASE_URL}/api/notices/${id}`,
           { title, description, link },
           {
             headers: {
@@ -46,7 +47,7 @@ const NewNotice = () => {
       } else {
         // Create new notice
         const res = await axios.post(
-          "http://localhost:3001/api/notices",
+          `${API_BASE_URL}/api/notices`,
           { title, description, link },
           {
             headers: {

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./NewCourse.css";
+import API_BASE_URL from "../config";
 
 const NewCourse = () => {
   const [courseData, setCourseData] = useState({
@@ -79,7 +81,7 @@ const NewCourse = () => {
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:3001/api/courses/newCourse", {
+      const response = await fetch(`${API_BASE_URL}/api/courses/newCourse`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

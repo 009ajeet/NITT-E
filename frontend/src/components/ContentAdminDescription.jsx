@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import "./ContentAdminDescription.css";
+import API_BASE_URL from '../config';
 
 const ContentAdminDescription = () => {
   const { courseId } = useParams();
@@ -52,6 +53,7 @@ const ContentAdminDescription = () => {
   });
   const [requiredDocuments, setRequiredDocuments] = useState([]);
   const [newField, setNewField] = useState({ academicField: "", name: "", label: "", type: "text" });
+  const [formStructure, setFormStructure] = useState(null);
 
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
@@ -117,7 +119,7 @@ const ContentAdminDescription = () => {
     if (user && user.role === "content_admin" && courseId) {
       // Fetch course details to get programType
       axios
-        .get(`http://127.0.0.1:3001/api/courses/${courseId}`, {
+        .get(`${API_BASE_URL}/api/courses/${courseId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -132,87 +134,20 @@ const ContentAdminDescription = () => {
 
       // Fetch form structure
       axios
-        .get(`http://127.0.0.1:3001/api/get-form-structure/${courseId}`, {
+        .get(`${API_BASE_URL}/api/get-form-structure/${courseId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
         .then((res) => {
           console.log("Fetched form structure:", res.data);
-          setRequiredAcademicFields(res.data.requiredAcademicFields || []);
-          const fetchedSubfields = res.data.requiredAcademicSubfields || {};
-          setRequiredAcademicSubfields({
-            tenth: {
-              percentage: fetchedSubfields.tenth?.percentage || false,
-              yearOfPassing: fetchedSubfields.tenth?.yearOfPassing || false,
-              board: fetchedSubfields.tenth?.board || false,
-              schoolName: fetchedSubfields.tenth?.schoolName || false,
-              customFields: fetchedSubfields.tenth?.customFields || [],
-            },
-            twelth: {
-              percentage: fetchedSubfields.twelth?.percentage || false,
-              yearOfPassing: fetchedSubfields.twelth?.yearOfPassing || false,
-              board: fetchedSubfields.twelth?.board || false,
-              schoolName: fetchedSubfields.twelth?.schoolName || false,
-              customFields: fetchedSubfields.twelth?.customFields || [],
-            },
-            graduation: {
-              percentage: fetchedSubfields.graduation?.percentage || false,
-              yearOfPassing: fetchedSubfields.graduation?.yearOfPassing || false,
-              university: fetchedSubfields.graduation?.university || false,
-              collegeName: fetchedSubfields.graduation?.collegeName || false,
-              customFields: fetchedSubfields.graduation?.customFields || [],
-            },
-            postgraduate: {
-              percentage: fetchedSubfields.postgraduate?.percentage || false,
-              yearOfPassing: fetchedSubfields.postgraduate?.yearOfPassing || false,
-              university: fetchedSubfields.postgraduate?.university || false,
-              collegeName: fetchedSubfields.postgraduate?.collegeName || false,
-              customFields: fetchedSubfields.postgraduate?.customFields || [],
-            },
-          });
-          setRequiredDocuments(res.data.requiredDocuments || []);
-          if (res.data.programType) {
-            setProgramType(res.data.programType);
+          if (res.data) {
+            setFormStructure(res.data);
           }
         })
-        .catch((err) => {
-          console.error("Error fetching form structure:", err);
-          setRequiredAcademicFields([]);
-          setRequiredAcademicSubfields({
-            tenth: {
-              percentage: false,
-              yearOfPassing: false,
-              board: false,
-              schoolName: false,
-              customFields: [],
-            },
-            twelth: {
-              percentage: false,
-              yearOfPassing: false,
-              board: false,
-              schoolName: false,
-              customFields: [],
-            },
-            graduation: {
-              percentage: false,
-              yearOfPassing: false,
-              university: false,
-              collegeName: false,
-              customFields: [],
-            },
-            postgraduate: {
-              percentage: false,
-              yearOfPassing: false,
-              university: false,
-              collegeName: false,
-              customFields: [],
-            },
-          });
-          setRequiredDocuments([]);
-        });
+        .catch((err) => console.error("Error fetching form structure:", err));
     }
-  }, [user, courseId]);
+  }, [courseId, user]);
 
   const handleImage1Upload = (e) => {
     const file = e.target.files[0];
@@ -314,49 +249,45 @@ const ContentAdminDescription = () => {
     return true;
   };
 
-  const saveDescription = () => {
-    if (!areDescriptionFieldsFilled()) {
-      alert("Please fill all fields, including at least one subject per semester and select a program type (UG/PG).");
+  const handleSave = () => {
+    if (!validateForm()) {
       return;
     }
 
-    if (!programType) {
-      alert("Please select a program type (UG/PG).");
-      return;
-    }
-
-    const courseData = {
+    const payload = {
+      courseId,
       programDescription,
       image1,
       image2,
-      vision,
-      mission,
-      yearsOfDepartment: Number(yearsOfDepartment),
-      syllabus,
-      programEducationalObjectives: programEducationalObjectives.split("\n").filter((peo) => peo.trim()),
-      programOutcomes: programOutcomes.split("\n").filter((po) => po.trim()),
-      programType,
+      formStructure: {
+        ...formStructure,
+        programType,
+      },
     };
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please log in to save the description.");
+      alert("Please log in to save changes");
       return;
     }
 
     axios
-      .post(`http://127.0.0.1:3001/api/courses/${courseId}/add-description`, courseData, {
+      .post(`${API_BASE_URL}/api/forms/save-form-structure`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
       .then((response) => {
-        console.log("Description saved:", response.data);
-        alert(response.data.message || "Description and program type saved successfully!");
+        console.log("Form structure saved:", response.data);
+        alert("Form structure saved successfully");
       })
-      .catch((error) => {
-        console.error("Error adding program description:", error);
-        alert(error.response?.data?.message || "Failed to save description. Please try again.");
+      .catch((err) => {
+        console.error("Error saving form:", err);
+        const errorMessage =
+          err.response?.status === 404
+            ? "Form submission endpoint not found. Please contact support."
+            : err.response?.data?.message || "Failed to save form structure. Please try again.";
+        alert(errorMessage);
       });
   };
 
@@ -437,57 +368,6 @@ const ContentAdminDescription = () => {
         ? prev.filter((d) => d !== doc)
         : [...prev, doc]
     );
-  };
-
-  // Save form structure
-  const saveForm = () => {
-    console.log("saveForm triggered");
-    if (!courseId) {
-      alert("No course selected!");
-      return;
-    }
-
-    if (!programType) {
-      alert("Please select a program type (UG/PG) before saving the form structure.");
-      return;
-    }
-
-    const payload = {
-      courseId,
-      programType,
-      requiredAcademicFields,
-      requiredAcademicSubfields,
-      requiredDocuments,
-      educationFields: { tenth: false, twelfth: false, ug: false, pg: false },
-      sections: [],
-    };
-
-    console.log("Saving form with:", payload);
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Please log in to save the form structure.");
-      return;
-    }
-
-    axios
-      .post("http://127.0.0.1:3001/api/forms/save-form-structure", payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        console.log("Form structure saved:", response.data);
-        alert("Form structure saved successfully");
-      })
-      .catch((err) => {
-        console.error("Error saving form:", err);
-        const errorMessage =
-          err.response?.status === 404
-            ? "Form submission endpoint not found. Please contact support."
-            : err.response?.data?.message || "Failed to save form structure. Please try again.";
-        alert(errorMessage);
-      });
   };
 
   // Handle Modify Form button click
@@ -768,13 +648,13 @@ const ContentAdminDescription = () => {
             </div>
           ))}
 
-          <button className="submit-modified-button" onClick={saveForm}>
+          <button className="submit-modified-button" onClick={handleSave}>
             Submit Modified Application
           </button>
         </div>
       )}
 
-      <button className="btn btn-primary" onClick={saveDescription}>
+      <button className="btn btn-primary" onClick={handleSave}>
         Save Description
       </button>
     </div>

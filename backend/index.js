@@ -46,6 +46,7 @@ const corsOptions = {
     ];
     
     console.log('Request origin:', origin);
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
     
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -69,12 +70,48 @@ app.use(cors(corsOptions));
 // Handle preflight requests explicitly
 app.options('*', (req, res) => {
   console.log('Handling preflight request for:', req.path);
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  console.log('Preflight headers:', JSON.stringify(req.headers, null, 2));
+  
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    "https://nitt-e-fronted.onrender.com",
+    "https://nitt-e.onrender.com",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:3001"
+  ];
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Max-Age', '86400');
-  res.sendStatus(204);
+  
+  // Send 204 for preflight requests
+  res.status(204).end();
+});
+
+// Error handling middleware for CORS
+app.use((err, req, res, next) => {
+  if (err.message === 'Not allowed by CORS') {
+    console.error('CORS Error:', {
+      origin: req.headers.origin,
+      path: req.path,
+      method: req.method,
+      headers: req.headers
+    });
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Not allowed by CORS',
+      origin: req.headers.origin
+    });
+  }
+  next(err);
 });
 
 // Request logging middleware

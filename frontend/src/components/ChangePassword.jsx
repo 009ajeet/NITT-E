@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./ChangePassword.css"; // Create this file for styling if needed
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from '../config';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ const ChangePassword = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.put(
-        "http://localhost:3001/change-password", // Replace with your actual backend endpoint
+        `${API_BASE_URL}/change-password`,
         {
           currentPassword,
           newPassword,

@@ -8,6 +8,7 @@ import { BiLoaderAlt } from 'react-icons/bi';
 import { MdEmail, MdOutlineVerified } from 'react-icons/md';
 import { BsThreeDotsVertical, BsShieldLock } from 'react-icons/bs';
 import './AdminDashboard.css';
+import API_BASE_URL from '../config';
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -29,7 +30,7 @@ const AdminDashboard = () => {
       try {
         // Simulate a slight delay to show the loading state
         await new Promise(resolve => setTimeout(resolve, 800));
-        const res = await axios.get("http://localhost:3001/api/users", {
+        const res = await axios.get(`${API_BASE_URL}/api/users`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
         });
         setUsers(res.data);
@@ -44,7 +45,7 @@ const AdminDashboard = () => {
 
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:3001/api/users/${userId}`, {
+      await axios.delete(`${API_BASE_URL}/api/users/${userId}`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
       });
       setUsers(users.filter(user => user._id !== userId));

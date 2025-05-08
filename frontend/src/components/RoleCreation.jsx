@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './RoleCreation.css';
+import API_BASE_URL from '../config';
 
 const RoleCreation = () => {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ const RoleCreation = () => {
 
     try {
       const res = await axios.post(
-        'http://localhost:3001/api/users/create',
+        `${API_BASE_URL}/api/users/create`,
         formData,
         {
           headers: {

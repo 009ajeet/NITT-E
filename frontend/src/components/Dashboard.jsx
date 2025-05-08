@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import API_BASE_URL from '../config';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -21,7 +22,7 @@ const Dashboard = () => {
     }
 
     axios
-      .get(`http://localhost:3001/api/users/${userId}`, { headers })
+      .get(`${API_BASE_URL}/api/users/${userId}`, { headers })
       .then((res) => setUser(res.data))
       .catch((err) => {
         console.error("Failed to fetch user data", err);
@@ -32,7 +33,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (user?.email) {
       axios
-        .get(`http://localhost:3001/api/student/dashboard?email=${user.email}`, { headers })
+        .get(`${API_BASE_URL}/api/student/dashboard?email=${user.email}`, { headers })
         .then((res) => {
           console.log("✅ Dashboard data fetched:", res.data);
           setDashboardData(res.data.dashboardData);

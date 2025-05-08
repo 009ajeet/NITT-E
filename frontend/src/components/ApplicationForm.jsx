@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./ApplicationForm.css";
 import axios from "axios";
 import { useParams } from "react-router-dom";
+import API_BASE_URL from '../config';
 
 const ApplicationForm = () => {
   const { courseId } = useParams();
@@ -92,7 +93,7 @@ const ApplicationForm = () => {
   useEffect(() => {
     const fetchFormStructure = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/forms/get-form-structure/${courseId}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/forms/get-form-structure/${courseId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setFormStructure({
@@ -188,7 +189,7 @@ const ApplicationForm = () => {
         }
 
         const response = await axios.post(
-          "http://localhost:3001/api/applications/submit-application",
+          `${API_BASE_URL}/api/applications/submit-application`,
           submissionData,
           {
             headers: {

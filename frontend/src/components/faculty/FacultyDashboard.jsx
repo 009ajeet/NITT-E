@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import "./FacultyDashboard.css";
+import API_BASE_URL from '../../config';
 
 const FacultyDashboard = () => {
   const { user } = useOutletContext(); // ✅ Access user from context
@@ -10,20 +11,19 @@ const FacultyDashboard = () => {
   useEffect(() => {
     if (!user || !user.email) return;
     
-    const token = localStorage.getItem("token"); // Add this line
+    const token = localStorage.getItem("token");
     
     const fetchData = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:3001/api/faculty/info/${user.email}`,
+          `${API_BASE_URL}/api/faculty/info/${user.email}`,
           {
-            headers: { Authorization: `Bearer ${token}` }, // Add auth headers
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         setFacultyInfo(res.data);
       } catch (error) {
         console.error("Failed to fetch faculty info", error);
-        // Add this check for unauthorized responses
         if (error.response?.status === 401 || error.response?.status === 403) {
           navigate('/login');
         }

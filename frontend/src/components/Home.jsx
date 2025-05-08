@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Carousel } from "react-bootstrap";
 import "./Home.css";
 import "./ApplicationForm";
+import API_BASE_URL from '../config';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Home = () => {
         return;
       }
 
-      const response = await axios.get("http://localhost:3001/api/notices", {
+      const response = await axios.get(`${API_BASE_URL}/api/notices`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -45,7 +46,7 @@ const Home = () => {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:3001/api/notices/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/notices/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

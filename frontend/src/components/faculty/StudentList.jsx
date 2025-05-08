@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaUser, FaSearch } from "react-icons/fa";
 import "./StudentList.css";
+import API_BASE_URL from '../../config';
 
 const StudentList = () => {
   const [students, setStudents] = useState([]);
@@ -22,7 +23,7 @@ const StudentList = () => {
 
     const fetchStudents = async () => {
       try {
-        const response = await axios.get("http://localhost:3001/api/faculty/students", {
+        const response = await axios.get(`${API_BASE_URL}/api/faculty/students`, {
           headers: { Authorization: `Bearer ${storedToken}` }
         });
         setStudents(response.data);

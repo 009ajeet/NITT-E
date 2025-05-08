@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import API_BASE_URL from '../config';
 
 const ContentAdmin = () => {
   const [courses, setCourses] = useState([]); // List of courses
@@ -45,7 +46,7 @@ const ContentAdmin = () => {
     setSelectedCourse(course); // Store selected course (includes courseId)
 
     // Fetch existing form structure for this course
-    axios.get(`http://localhost:3001/api/get-form-structure/${course._id}`)
+    axios.get(`${API_BASE_URL}/api/get-form-structure/${course._id}`)
       .then(res => {
         setFields(res.data.fields || []);
         setEducationFields(res.data.educationFields || {
@@ -80,7 +81,7 @@ const ContentAdmin = () => {
       return;
     }
 
-    axios.post("http://localhost:3001/api/save-form-structure", {
+    axios.post(`${API_BASE_URL}/api/save-form-structure`, {
       courseId: selectedCourse._id,
       fields,
       educationFields,
@@ -95,7 +96,7 @@ const ContentAdmin = () => {
     const newDescription = prompt("Enter new course description:");
     if (!newDescription) return;
 
-    axios.put(`http://localhost:3001/api/update-course/${selectedCourse._id}`, { description: newDescription })
+    axios.put(`${API_BASE_URL}/api/update-course/${selectedCourse._id}`, { description: newDescription })
       .then(() => {
         alert("Description updated successfully");
         setCourses(courses.map(course =>

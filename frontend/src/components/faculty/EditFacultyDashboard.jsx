@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./EditFacultyDashboard.css";
+import API_BASE_URL from '../../config';
 
 const EditFacultyDashboard = () => {
   const [info, setInfo] = useState({
@@ -38,7 +39,7 @@ const EditFacultyDashboard = () => {
         console.error("Error parsing stored user:", err);
         const userId = localStorage.getItem("userId");
         if (userId) {
-          axios.get(`http://localhost:3001/api/users/${userId}`, {
+          axios.get(`${API_BASE_URL}/api/users/${userId}`, {
             headers: { Authorization: `Bearer ${storedToken}` },
           })
           .then(res => {
@@ -56,7 +57,7 @@ const EditFacultyDashboard = () => {
     } else {
       const userId = localStorage.getItem("userId");
       if (userId) {
-        axios.get(`http://localhost:3001/api/users/${userId}`, {
+        axios.get(`${API_BASE_URL}/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         })
         .then(res => {
@@ -79,7 +80,7 @@ const EditFacultyDashboard = () => {
 
       try {
         const res = await axios.get(
-          `http://localhost:3001/api/faculty/info/${userEmail}`,
+          `${API_BASE_URL}/api/faculty/info/${userEmail}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -131,7 +132,7 @@ const EditFacultyDashboard = () => {
 
     try {
       await axios.put(
-        `http://localhost:3001/api/faculty/info`,
+        `${API_BASE_URL}/api/faculty/info`,
         {
           email: userEmail,
           name: info.name,

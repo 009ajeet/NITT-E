@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./AdminDetails.css"; // Optional for styling
+import API_BASE_URL from '../config';
 
 const AdminDetails = () => {
   const { id } = useParams();  // Get admin ID from URL
@@ -13,7 +14,7 @@ const AdminDetails = () => {
   useEffect(() => {
     const fetchAdminDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/users/${id}`, {
+        const res = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
           },

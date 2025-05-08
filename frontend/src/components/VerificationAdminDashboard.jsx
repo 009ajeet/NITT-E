@@ -3,8 +3,7 @@ import axios from "axios";
 import { MdDarkMode, MdLightMode, MdOutlineVerified, MdOutlineCancel } from "react-icons/md";
 import { FaSearch, FaUsers, FaBook } from "react-icons/fa";
 import "./VerificationAdminDashboard.css";
-
-const API_BASE_URL = "http://localhost:3001/api";
+import API_BASE_URL from '../config';
 
 const VerificationAdminDashboard = () => {
   const [students, setStudents] = useState([]);

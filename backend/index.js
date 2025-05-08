@@ -447,7 +447,7 @@ app.get("/", (req, res) => {
 });
 
 // Use port from config with fallback to 3001
-const PORT = config.port || 3001;
+const PORT = process.env.PORT || config.port || 3001;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

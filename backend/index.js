@@ -46,7 +46,6 @@ const corsOptions = {
     ];
     
     console.log('Request origin:', origin);
-    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
     
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {

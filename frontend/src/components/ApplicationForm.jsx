@@ -96,6 +96,7 @@ const ApplicationForm = () => {
         const response = await axios.get(`${API_BASE_URL}/api/forms/get-form-structure/${courseId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
+        console.log("Fetched form structure:", response.data); // Added console.log
         setFormStructure({
           programType: response.data.programType || "PG",
           requiredAcademicFields: response.data.requiredAcademicFields || [],
@@ -411,21 +412,21 @@ const ApplicationForm = () => {
     const newEntry =
       level === "graduation" || level === "postgraduate"
         ? {
-            collegeName: "",
-            degree: "",
-            branch: "",
-            university: "",
-            year: "",
-            percentage: "",
-          }
+          collegeName: "",
+          degree: "",
+          branch: "",
+          university: "",
+          year: "",
+          percentage: "",
+        }
         : {
-            schoolName: "",
-            board: "",
-            year: "",
-            percentage: "",
-            subjects: "",
-            ...(level === "twelth" && { stream: "" }),
-          };
+          schoolName: "",
+          board: "",
+          year: "",
+          percentage: "",
+          subjects: "",
+          ...(level === "twelth" && { stream: "" }),
+        };
     formStructure.requiredAcademicSubfields[level].customFields.forEach((field) => {
       newEntry[field.name] = "";
     });

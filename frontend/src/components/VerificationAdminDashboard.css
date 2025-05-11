@@ -392,6 +392,53 @@
     box-shadow: var(--shadow-sm);
 }
 
+.va-btn-assign.va-btn-danger {
+    background: var(--gradient-danger);
+}
+
+.va-btn-assign.va-btn-secondary {
+    background: var(--gradient-warning);
+}
+
+/* Batch Assign Container */
+.va-batch-assign-container {
+    background-color: var(--bg-secondary);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+}
+
+.va-batch-assign-container h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.va-course-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+}
+
+.va-action-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.va-batch-input {
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    width: 80px;
+    font-size: 0.9rem;
+}
+
 /* Modal Styling */
 .va-student-details-modal {
     position: fixed;
@@ -579,6 +626,54 @@
     margin-bottom: 15px;
     text-align: center;
     font-size: 0.9rem;
+}
+
+/* Styles for Create Officer Form Section (when shown under course actions) */
+.va-create-officer-form-section {
+    background-color: var(--bg-primary);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.va-create-officer-form-section h3 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.va-create-officer-form-inline .va-form-group {
+    margin-bottom: 1rem;
+}
+
+.va-create-officer-form-inline label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.va-create-officer-form-inline input[type="text"],
+.va-create-officer-form-inline input[type="email"],
+.va-create-officer-form-inline input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.9rem;
+}
+
+.va-create-officer-form-inline .va-btn-create-officer {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    margin-top: 1rem;
 }
 
 /* Animations */

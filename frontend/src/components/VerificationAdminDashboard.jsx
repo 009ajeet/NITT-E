@@ -26,10 +26,10 @@ const VerificationAdminDashboard = () => {
   const [newOfficerName, setNewOfficerName] = useState("");
   const [newOfficerEmail, setNewOfficerEmail] = useState("");
   const [newOfficerPassword, setNewOfficerPassword] = useState("");
-  const [selectedCourseForNewOfficer, setSelectedCourseForNewOfficer] = useState("");
   const [isCreatingOfficer, setIsCreatingOfficer] = useState(false);
   const [createOfficerError, setCreateOfficerError] = useState(null);
   const [createOfficerSuccess, setCreateOfficerSuccess] = useState(null);
+  const [showCreateOfficerForm, setShowCreateOfficerForm] = useState(false);
 
   // Toggle theme between light and dark
   const toggleTheme = useCallback(() => {
@@ -233,8 +233,8 @@ const VerificationAdminDashboard = () => {
   // Handle creating a new verification officer
   const handleCreateOfficer = useCallback(async (e) => {
     e.preventDefault();
-    if (!newOfficerName || !newOfficerEmail || !newOfficerPassword || !selectedCourseForNewOfficer) {
-      setCreateOfficerError("All fields are required to create an officer.");
+    if (!newOfficerName || !newOfficerEmail || !newOfficerPassword || !selectedCourse?._id) {
+      setCreateOfficerError("Name, email, password are required, and a course must be selected.");
       setCreateOfficerSuccess(null);
       return;
     }
@@ -248,7 +248,7 @@ const VerificationAdminDashboard = () => {
           name: newOfficerName,
           email: newOfficerEmail,
           password: newOfficerPassword,
-          courseId: selectedCourseForNewOfficer,
+          courseId: selectedCourse._id,
         },
         getAuthHeaders()
       );
@@ -256,8 +256,8 @@ const VerificationAdminDashboard = () => {
       setNewOfficerName("");
       setNewOfficerEmail("");
       setNewOfficerPassword("");
-      setSelectedCourseForNewOfficer("");
       fetchVerificationOfficers(); // Refresh the list of officers
+      setShowCreateOfficerForm(false); // Hide form on success
     } catch (err) {
       console.error("Error creating verification officer:", err);
       setCreateOfficerError(
@@ -266,7 +266,7 @@ const VerificationAdminDashboard = () => {
     } finally {
       setIsCreatingOfficer(false);
     }
-  }, [newOfficerName, newOfficerEmail, newOfficerPassword, selectedCourseForNewOfficer, getAuthHeaders, fetchVerificationOfficers]);
+  }, [newOfficerName, newOfficerEmail, newOfficerPassword, selectedCourse, getAuthHeaders, fetchVerificationOfficers]);
 
   // Fetch initial data
   useEffect(() => {
@@ -358,64 +358,6 @@ const VerificationAdminDashboard = () => {
         </div>
       </section>
 
-      {/* Section to Create Verification Officer */}
-      <section className="va-create-officer-section">
-        <h2>Create Verification Officer</h2>
-        {createOfficerSuccess && <div className="va-success-message">{createOfficerSuccess}</div>}
-        {createOfficerError && <div className="va-error-message">{createOfficerError}</div>}
-        <form onSubmit={handleCreateOfficer} className="va-create-officer-form">
-          <div className="va-form-group">
-            <label htmlFor="officerName">Name:</label>
-            <input
-              type="text"
-              id="officerName"
-              value={newOfficerName}
-              onChange={(e) => setNewOfficerName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="va-form-group">
-            <label htmlFor="officerEmail">Email:</label>
-            <input
-              type="email"
-              id="officerEmail"
-              value={newOfficerEmail}
-              onChange={(e) => setNewOfficerEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="va-form-group">
-            <label htmlFor="officerPassword">Password:</label>
-            <input
-              type="password"
-              id="officerPassword"
-              value={newOfficerPassword}
-              onChange={(e) => setNewOfficerPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="va-form-group">
-            <label htmlFor="officerCourse">Assign to Course:</label>
-            <select
-              id="officerCourse"
-              value={selectedCourseForNewOfficer}
-              onChange={(e) => setSelectedCourseForNewOfficer(e.target.value)}
-              required
-            >
-              <option value="">Select a Course</option>
-              {courses.map((course) => (
-                <option key={course._id} value={course._id}>
-                  {course.title || "Untitled Course"}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" className="va-btn-create-officer" disabled={isCreatingOfficer}>
-            {isCreatingOfficer ? "Creating..." : "Create Officer"}
-          </button>
-        </form>
-      </section>
-
       {courses.length > 0 && (
         <section className="va-courses-section">
           <h2>Courses</h2>
@@ -441,34 +383,94 @@ const VerificationAdminDashboard = () => {
         <>
           <div className="va-batch-assign-container">
             <h2>Course: {selectedCourse.title || "Untitled"}</h2>
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-              <input
-                type="number"
-                min="1"
-                value={batchSize}
-                onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 1))}
-                className="va-batch-input"
-              />
+            <div className="va-course-actions">
+              <div className="va-action-group">
+                <input
+                  type="number"
+                  min="1"
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="va-batch-input"
+                />
+                <button
+                  className="va-btn-assign"
+                  onClick={handleBatchAssignment}
+                  disabled={isAssigning || isUnassigning || showCreateOfficerForm}
+                >
+                  {isAssigning ? "Assigning..." : "Distribute Applications"}
+                </button>
+              </div>
               <button
-                className="va-btn-assign"
-                onClick={handleBatchAssignment}
-                disabled={isAssigning || isUnassigning}
-              >
-                {isAssigning ? "Assigning..." : "Distribute Applications"}
-              </button>
-              <button
-                className="va-btn-assign"
+                className="va-btn-assign va-btn-danger"
                 onClick={handleUnassign}
-                disabled={isAssigning || isUnassigning}
-                style={{ background: "var(--gradient-danger)" }}
+                disabled={isAssigning || isUnassigning || showCreateOfficerForm}
               >
                 {isUnassigning ? "Unassigning..." : "Unassign All"}
+              </button>
+              <button
+                className="va-btn-assign va-btn-secondary"
+                onClick={() => {
+                  setShowCreateOfficerForm(!showCreateOfficerForm);
+                  setCreateOfficerError(null);
+                  setCreateOfficerSuccess(null);
+                  if (showCreateOfficerForm) {
+                    setNewOfficerName("");
+                    setNewOfficerEmail("");
+                    setNewOfficerPassword("");
+                  }
+                }}
+                disabled={isAssigning || isUnassigning}
+              >
+                {showCreateOfficerForm ? "Cancel Creation" : "Create Verification Officer"}
               </button>
             </div>
           </div>
 
-          {courseApplications.length === 0 && <p>No applications for this course.</p>}
-          {courseApplications.length > 0 && (
+          {showCreateOfficerForm && selectedCourse && (
+            <section className="va-create-officer-form-section">
+              <h3>Create & Assign Officer for {selectedCourse.title}</h3>
+              {createOfficerSuccess && <div className="va-success-message">{createOfficerSuccess}</div>}
+              {createOfficerError && <div className="va-error-message">{createOfficerError}</div>}
+              <form onSubmit={handleCreateOfficer} className="va-create-officer-form-inline">
+                <div className="va-form-group">
+                  <label htmlFor="officerName">Name:</label>
+                  <input
+                    type="text"
+                    id="officerName"
+                    value={newOfficerName}
+                    onChange={(e) => setNewOfficerName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="va-form-group">
+                  <label htmlFor="officerEmail">Email:</label>
+                  <input
+                    type="email"
+                    id="officerEmail"
+                    value={newOfficerEmail}
+                    onChange={(e) => setNewOfficerEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="va-form-group">
+                  <label htmlFor="officerPassword">Password:</label>
+                  <input
+                    type="password"
+                    id="officerPassword"
+                    value={newOfficerPassword}
+                    onChange={(e) => setNewOfficerPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <button type="submit" className="va-btn-create-officer" disabled={isCreatingOfficer}>
+                  {isCreatingOfficer ? "Creating..." : "Create & Assign Officer"}
+                </button>
+              </form>
+            </section>
+          )}
+
+          {courseApplications.length === 0 && !showCreateOfficerForm && <p>No applications for this course.</p>}
+          {courseApplications.length > 0 && !showCreateOfficerForm && (
             <section className="va-course-applications-section">
               <h3>Applications</h3>
               <div className="va-applications-list">
@@ -479,7 +481,7 @@ const VerificationAdminDashboard = () => {
                     app.verifiedBy &&
                     app.verifiedBy.name &&
                     app.verifiedBy.role;
-                  console.log("Application verification status:", { // Debug each application
+                  console.log("Application verification status:", {
                     appId: app._id,
                     verified: app.verified,
                     verifiedBy: app.verifiedBy,

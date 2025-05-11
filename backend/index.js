@@ -47,9 +47,9 @@ const corsOptions = {
       "http://127.0.0.1:3000",
       "http://127.0.0.1:3001"
     ];
-    
+
     console.log('Request origin:', origin);
-    
+
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       console.log('Origin allowed:', origin);
@@ -73,7 +73,7 @@ app.use(cors(corsOptions));
 app.options('*', (req, res) => {
   console.log('Handling preflight request for:', req.path);
   console.log('Preflight headers:', JSON.stringify(req.headers, null, 2));
-  
+
   const origin = req.headers.origin;
   const allowedOrigins = [
     "https://nitt-e-fronted.onrender.com",
@@ -96,7 +96,7 @@ app.options('*', (req, res) => {
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Max-Age', '86400');
-  
+
   // Send 204 for preflight requests
   res.status(204).end();
 });
@@ -318,7 +318,7 @@ app.post("/api/users/create", auth, authorizeAdmin, async (req, res) => {
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post("/api/login", async (req, res) => { // Changed from app.post("/login", ...)
   const { email, password } = req.body;
   try {
     const user = await UserModel.findOne({ email });

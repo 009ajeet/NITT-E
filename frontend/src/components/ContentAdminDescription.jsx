@@ -14,42 +14,18 @@ const ContentAdminDescription = () => {
   const [vision, setVision] = useState("");
   const [mission, setMission] = useState("");
   const [yearsOfDepartment, setYearsOfDepartment] = useState("");
-  const [syllabus, setSyllabus] = useState([{ semester: "", subjects: [] }]);
+  const [syllabus, setSyllabus] = useState([{ semester: "", subjects: [""] }]);
   const [programEducationalObjectives, setProgramEducationalObjectives] = useState("");
   const [programOutcomes, setProgramOutcomes] = useState("");
   const [programType, setProgramType] = useState("");
   const [showModifyForm, setShowModifyForm] = useState(false);
-  const [alertMessage, setAlertMessage] = useState(""); // State for temporary alert
+  const [alertMessage, setAlertMessage] = useState("");
   const [requiredAcademicFields, setRequiredAcademicFields] = useState([]);
   const [requiredAcademicSubfields, setRequiredAcademicSubfields] = useState({
-    tenth: {
-      percentage: false,
-      yearOfPassing: false,
-      board: false,
-      schoolName: false,
-      customFields: [],
-    },
-    twelth: {
-      percentage: false,
-      yearOfPassing: false,
-      board: false,
-      schoolName: false,
-      customFields: [],
-    },
-    graduation: {
-      percentage: false,
-      yearOfPassing: false,
-      university: false,
-      collegeName: false,
-      customFields: [],
-    },
-    postgraduate: {
-      percentage: false,
-      yearOfPassing: false,
-      university: false,
-      collegeName: false,
-      customFields: [],
-    },
+    tenth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+    twelth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+    graduation: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
+    postgraduate: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
   });
   const [requiredDocuments, setRequiredDocuments] = useState([]);
   const [newField, setNewField] = useState({ academicField: "", name: "", label: "", type: "text" });
@@ -57,7 +33,6 @@ const ContentAdminDescription = () => {
 
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-  // Academic and document options
   const academicOptions = {
     UG: ["tenth", "twelth"],
     PG: ["tenth", "twelth", "graduation", "postgraduate"],
@@ -65,48 +40,28 @@ const ContentAdminDescription = () => {
 
   const documentOptions = {
     UG: [
-      "10th Marksheet",
-      "12th Marksheet",
-      "Aadhaar",
-      "PAN",
-      "Driving License",
-      "Image (Passport Photo)",
-      "Signature",
+      "10th Marksheet", "12th Marksheet", "Aadhaar", "PAN",
+      "Driving License", "Image (Passport Photo)", "Signature",
     ],
     PG: [
-      "10th Marksheet",
-      "12th Marksheet",
-      "Graduation Marksheet",
-      "Postgraduate Marksheet",
-      "Aadhaar",
-      "PAN",
-      "Driving License",
-      "Image (Passport Photo)",
-      "Signature",
+      "10th Marksheet", "12th Marksheet", "Graduation Marksheet", "Postgraduate Marksheet",
+      "Aadhaar", "PAN", "Driving License", "Image (Passport Photo)", "Signature",
     ],
   };
 
-  // Subfield labels for display
   const subfieldLabels = {
-    percentage: "Percentage",
-    yearOfPassing: "Year of Passing",
-    board: "Board",
-    university: "University",
-    schoolName: "School Name",
-    collegeName: "College Name",
+    percentage: "Percentage", yearOfPassing: "Year of Passing", board: "Board",
+    university: "University", schoolName: "School Name", collegeName: "College Name",
   };
 
-  // Field type options
   const fieldTypeOptions = ["text", "number", "date", "dropdown"];
 
-  // Fetch logged-in user
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const decodedUser = jwtDecode(token);
         setUser(decodedUser);
-        console.log("Decoded user:", decodedUser);
       } catch (err) {
         console.error("Token decoding failed:", err);
         setUser(null);
@@ -114,74 +69,76 @@ const ContentAdminDescription = () => {
     }
   }, []);
 
-  // Fetch course and form structure
   useEffect(() => {
     if (user && user.role === "content_admin" && courseId) {
-      // Fetch course details to get programType
       axios
         .get(`${API_BASE_URL}/api/courses/${courseId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
         .then((res) => {
-          console.log("Fetched course:", res.data);
           if (res.data.programType) {
             setProgramType(res.data.programType);
           }
+          setProgramDescription(res.data.programDescription || "");
+          setImage1(res.data.image1 || null);
+          setImage2(res.data.image2 || null);
+          setVision(res.data.vision || "");
+          setMission(res.data.mission || "");
+          setYearsOfDepartment(res.data.yearsOfDepartment || "");
+          setSyllabus(res.data.syllabus && res.data.syllabus.length > 0 ? res.data.syllabus : [{ semester: "", subjects: [""] }]);
+          setProgramEducationalObjectives(res.data.programEducationalObjectives || "");
+          setProgramOutcomes(res.data.programOutcomes || "");
         })
-        .catch((err) => console.error("Error fetching course:", err));
+        .catch((err) => console.error("Error fetching course details:", err));
 
-      // Fetch form structure
       axios
         .get(`${API_BASE_URL}/api/get-form-structure/${courseId}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
         .then((res) => {
-          console.log("Fetched form structure:", res.data);
           if (res.data) {
             setFormStructure(res.data);
+            setRequiredAcademicFields(res.data.requiredAcademicFields || []);
+            setRequiredAcademicSubfields(res.data.requiredAcademicSubfields || {
+              tenth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+              twelth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+              graduation: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
+              postgraduate: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
+            });
+            setRequiredDocuments(res.data.requiredDocuments || []);
           }
         })
-        .catch((err) => console.error("Error fetching form structure:", err));
+        .catch((err) => {
+          console.error("Error fetching form structure:", err);
+          setRequiredAcademicFields([]);
+          setRequiredAcademicSubfields({
+            tenth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+            twelth: { percentage: false, yearOfPassing: false, board: false, schoolName: false, customFields: [] },
+            graduation: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
+            postgraduate: { percentage: false, yearOfPassing: false, university: false, collegeName: false, customFields: [] },
+          });
+          setRequiredDocuments([]);
+        });
     }
   }, [courseId, user]);
 
-  const handleImage1Upload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > maxFileSize) {
-        alert("Image 1 is too large. Maximum size is 5MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage1(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = (file, setImage) => {
+    if (file.size > maxFileSize) {
+      setAlertMessage("File size exceeds 5MB limit.");
+      setTimeout(() => setAlertMessage(""), 3000);
+      return;
     }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImage(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handleImage2Upload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > maxFileSize) {
-        alert("Image 2 is too large. Maximum size is 5MB.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage2(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  const handleImage1Upload = (e) => handleImageUpload(e.target.files[0], setImage1);
+  const handleImage2Upload = (e) => handleImageUpload(e.target.files[0], setImage2);
 
-  const addSyllabusSemester = () => {
-    setSyllabus([...syllabus, { semester: "", subjects: [] }]);
-  };
+  const addSyllabusSemester = () => setSyllabus([...syllabus, { semester: "", subjects: [""] }]);
 
   const handleSyllabusChange = (index, field, value) => {
     const updatedSyllabus = [...syllabus];
@@ -201,51 +158,40 @@ const ContentAdminDescription = () => {
     setSyllabus(updatedSyllabus);
   };
 
-  // Validate description fields
-  const areDescriptionFieldsFilled = () => {
-    // Check basic fields
-    if (
-      !programDescription.trim() ||
-      !image1 ||
-      !image2 ||
-      !vision.trim() ||
-      !mission.trim() ||
-      !yearsOfDepartment
-    ) {
+  const validateForm = () => {
+    if (!programDescription.trim() || !vision.trim() || !mission.trim() || !yearsOfDepartment) {
+      setAlertMessage("Please fill in all basic description fields.");
+      setTimeout(() => setAlertMessage(""), 3000);
       return false;
     }
-
-    // Validate yearsOfDepartment is a positive number
+    if (!image1 || !image2) {
+      setAlertMessage("Please upload both images.");
+      setTimeout(() => setAlertMessage(""), 3000);
+      return false;
+    }
     const yearsNum = Number(yearsOfDepartment);
     if (isNaN(yearsNum) || yearsNum <= 0) {
+      setAlertMessage("Years of Department must be a positive number.");
+      setTimeout(() => setAlertMessage(""), 3000);
       return false;
     }
-
-    // Validate syllabus: each semester must have a non-empty name and at least one non-empty subject
-    if (
-      !syllabus.every(
-        (sem) =>
-          sem.semester.trim() &&
-          Array.isArray(sem.subjects) &&
-          sem.subjects.length > 0 &&
-          sem.subjects.every((sub) => sub.trim())
-      )
-    ) {
+    if (!syllabus.every(sem => sem.semester.trim() && Array.isArray(sem.subjects) && sem.subjects.length > 0 && sem.subjects.every(sub => sub.trim()))) {
+      setAlertMessage("Please ensure all syllabus semesters have a name and at least one subject.");
+      setTimeout(() => setAlertMessage(""), 3000);
       return false;
     }
-
-    // Validate programEducationalObjectives and programOutcomes
-    const peos = programEducationalObjectives.split("\n").filter((peo) => peo.trim());
-    const pos = programOutcomes.split("\n").filter((po) => po.trim());
+    const peos = programEducationalObjectives.split("\\n").filter(peo => peo.trim());
+    const pos = programOutcomes.split("\\n").filter(po => po.trim());
     if (peos.length === 0 || pos.length === 0) {
+      setAlertMessage("Please provide Program Educational Objectives and Program Outcomes.");
+      setTimeout(() => setAlertMessage(""), 3000);
       return false;
     }
-
-    // Validate programType
     if (!["UG", "PG"].includes(programType)) {
+      setAlertMessage("Please select a valid Program Type (UG/PG).");
+      setTimeout(() => setAlertMessage(""), 3000);
       return false;
     }
-
     return true;
   };
 
@@ -254,20 +200,32 @@ const ContentAdminDescription = () => {
       return;
     }
 
+    const updatedFormStructure = {
+      ...(formStructure || {}),
+      programType: programType,
+      requiredAcademicFields: requiredAcademicFields,
+      requiredAcademicSubfields: requiredAcademicSubfields,
+      requiredDocuments: requiredDocuments,
+    };
+
     const payload = {
       courseId,
       programDescription,
       image1,
       image2,
-      formStructure: {
-        ...formStructure,
-        programType,
-      },
+      vision,
+      mission,
+      yearsOfDepartment,
+      syllabus,
+      programEducationalObjectives,
+      programOutcomes,
+      formStructure: updatedFormStructure,
     };
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please log in to save changes");
+      setAlertMessage("Please log in to save changes.");
+      setTimeout(() => setAlertMessage(""), 3000);
       return;
     }
 
@@ -278,22 +236,24 @@ const ContentAdminDescription = () => {
         },
       })
       .then((response) => {
-        console.log("Form structure saved:", response.data);
-        alert("Form structure saved successfully");
+        setAlertMessage("Description and Form Structure saved successfully!");
+        setTimeout(() => setAlertMessage(""), 3000);
+        if (response.data && response.data.form) {
+          setFormStructure(response.data.form);
+        }
       })
       .catch((err) => {
-        console.error("Error saving form:", err);
+        console.error("Error saving description/form structure:", err);
         const errorMessage =
-          err.response?.status === 404
-            ? "Form submission endpoint not found. Please contact support."
-            : err.response?.data?.message || "Failed to save form structure. Please try again.";
-        alert(errorMessage);
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          (err.response?.status === 404 ? "Save endpoint not found." : "Failed to save. Please try again.");
+        setAlertMessage(errorMessage);
+        setTimeout(() => setAlertMessage(""), 5000);
       });
   };
 
-  // Toggle academic field requirement
   const toggleAcademicField = (field) => {
-    console.log("Toggling academic field:", field);
     setRequiredAcademicFields((prev) =>
       prev.includes(field)
         ? prev.filter((f) => f !== field)
@@ -301,9 +261,7 @@ const ContentAdminDescription = () => {
     );
   };
 
-  // Toggle academic subfield requirement
   const toggleAcademicSubfield = (academicField, subfield) => {
-    console.log(`Toggling subfield ${subfield} for ${academicField}`);
     setRequiredAcademicSubfields((prev) => ({
       ...prev,
       [academicField]: {
@@ -313,9 +271,7 @@ const ContentAdminDescription = () => {
     }));
   };
 
-  // Toggle custom field requirement
   const toggleCustomField = (academicField, fieldName) => {
-    console.log(`Toggling custom field ${fieldName} for ${academicField}`);
     setRequiredAcademicSubfields((prev) => ({
       ...prev,
       [academicField]: {
@@ -327,13 +283,11 @@ const ContentAdminDescription = () => {
     }));
   };
 
-  // Handle new field input change
   const handleNewFieldChange = (e) => {
     const { name, value } = e.target;
     setNewField((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Add custom field to an academic section
   const addCustomField = (academicField) => {
     if (!newField.name || !newField.label) {
       alert("Please provide both name and label for the custom field.");
@@ -360,9 +314,7 @@ const ContentAdminDescription = () => {
     setNewField({ academicField: "", name: "", label: "", type: "text" });
   };
 
-  // Toggle document requirement
   const toggleDocument = (doc) => {
-    console.log("Toggling document:", doc);
     setRequiredDocuments((prev) =>
       prev.includes(doc)
         ? prev.filter((d) => d !== doc)
@@ -370,24 +322,19 @@ const ContentAdminDescription = () => {
     );
   };
 
-  // Handle Modify Form button click
   const handleModifyFormToggle = () => {
-    if (!areDescriptionFieldsFilled()) {
-      setAlertMessage("Description form has not been filled.");
-      setTimeout(() => setAlertMessage(""), 3000); // Hide alert after 3 seconds
+    if (!validateForm()) {
       return;
     }
-    console.log("Modify Form button clicked, showModifyForm:", !showModifyForm);
     setShowModifyForm(!showModifyForm);
   };
 
   return (
     <div className="content-admin-description">
-      <h2>Add Program Description</h2>
+      <h2>Add/Edit Program Description & Form Structure</h2>
 
-      {/* Temporary Alert Pop-up */}
       {alertMessage && (
-        <div className="alert-popup">
+        <div className={`alert-popup ${alertMessage.includes("successfully") ? "success" : "error"}`}>
           {alertMessage}
         </div>
       )}
@@ -499,7 +446,7 @@ const ContentAdminDescription = () => {
       <div className="form-group">
         <label>Program Type</label>
         <div>
-          <label>
+          <label className="radio-label">
             <input
               type="radio"
               name="programType"
@@ -509,7 +456,7 @@ const ContentAdminDescription = () => {
             />
             UG (Undergraduate)
           </label>
-          <label>
+          <label className="radio-label">
             <input
               type="radio"
               name="programType"
@@ -522,36 +469,30 @@ const ContentAdminDescription = () => {
         </div>
       </div>
 
-      {(programType === "UG" || programType === "PG") && (
-        <button
-          onClick={handleModifyFormToggle}
-          className="btn btn-secondary"
-          style={{ marginTop: "10px" }}
-        >
-          {showModifyForm ? "Hide Modify Form" : "Modify Form"}
-        </button>
-      )}
+      <button
+        onClick={handleModifyFormToggle}
+        className="btn btn-secondary"
+        style={{ marginTop: "10px", marginBottom: "10px" }}
+        disabled={!programType}
+      >
+        {showModifyForm ? "Hide Modify Form Structure" : "Modify Form Structure"}
+      </button>
 
       {showModifyForm && (programType === "UG" || programType === "PG") && (
         <div className="modify-form-section">
-          <h4>Modify Form for {programType}</h4>
-
-          <h5>Academic Fields</h5>
+          <h4>Modify Application Form Structure for {programType}</h4>
+          <h5>Academic Fields to Include</h5>
           {academicOptions[programType].map((field) => (
             <div key={field} className="academic-field">
               <div className="checkbox-item">
                 <input
                   type="checkbox"
+                  id={`field-${field}`}
                   checked={requiredAcademicFields.includes(field)}
                   onChange={() => toggleAcademicField(field)}
                 />
-                <label>
-                  {field === "tenth"
-                    ? "10th"
-                    : field === "twelth"
-                    ? "12th"
-                    : field.charAt(0).toUpperCase() + field.slice(1)}{" "}
-                  Details
+                <label htmlFor={`field-${field}`}>
+                  {subfieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1)} Details
                 </label>
               </div>
               {requiredAcademicFields.includes(field) && requiredAcademicSubfields[field] && (
@@ -562,20 +503,22 @@ const ContentAdminDescription = () => {
                       <div key={subfield} className="checkbox-item subfield-item">
                         <input
                           type="checkbox"
+                          id={`subfield-${field}-${subfield}`}
                           checked={requiredAcademicSubfields[field][subfield]}
                           onChange={() => toggleAcademicSubfield(field, subfield)}
                         />
-                        <label>{subfieldLabels[subfield]}</label>
+                        <label htmlFor={`subfield-${field}-${subfield}`}>{subfieldLabels[subfield]}</label>
                       </div>
                     ))}
                   {requiredAcademicSubfields[field].customFields.map((customField) => (
                     <div key={customField.name} className="checkbox-item subfield-item">
                       <input
                         type="checkbox"
+                        id={`custom-${field}-${customField.name}`}
                         checked={customField.required}
                         onChange={() => toggleCustomField(field, customField.name)}
                       />
-                      <label>
+                      <label htmlFor={`custom-${field}-${customField.name}`}>
                         {customField.label} ({customField.type})
                       </label>
                     </div>
@@ -585,12 +528,8 @@ const ContentAdminDescription = () => {
                       type="text"
                       name="name"
                       value={newField.academicField === field ? newField.name : ""}
-                      onChange={(e) =>
-                        handleNewFieldChange({
-                          target: { name: "name", value: e.target.value },
-                        })
-                      }
-                      onFocus={() => setNewField((prev) => ({ ...prev, academicField: field }))}
+                      onChange={(e) => handleNewFieldChange({ target: { name: "name", value: e.target.value } })}
+                      onFocus={() => setNewField((prev) => ({ ...prev, academicField: field, name: "", label: "", type: "text" }))}
                       placeholder="Field Name (e.g., stream)"
                       className="add-field-input"
                     />
@@ -598,11 +537,7 @@ const ContentAdminDescription = () => {
                       type="text"
                       name="label"
                       value={newField.academicField === field ? newField.label : ""}
-                      onChange={(e) =>
-                        handleNewFieldChange({
-                          target: { name: "label", value: e.target.value },
-                        })
-                      }
+                      onChange={(e) => handleNewFieldChange({ target: { name: "label", value: e.target.value } })}
                       onFocus={() => setNewField((prev) => ({ ...prev, academicField: field }))}
                       placeholder="Field Label (e.g., Stream)"
                       className="add-field-input"
@@ -610,11 +545,7 @@ const ContentAdminDescription = () => {
                     <select
                       name="type"
                       value={newField.academicField === field ? newField.type : "text"}
-                      onChange={(e) =>
-                        handleNewFieldChange({
-                          target: { name: "type", value: e.target.value },
-                        })
-                      }
+                      onChange={(e) => handleNewFieldChange({ target: { name: "type", value: e.target.value } })}
                       onFocus={() => setNewField((prev) => ({ ...prev, academicField: field }))}
                       className="add-field-select"
                     >
@@ -627,8 +558,9 @@ const ContentAdminDescription = () => {
                     <button
                       onClick={() => addCustomField(field)}
                       className="btn btn-secondary add-field-button"
+                      type="button"
                     >
-                      Add Field
+                      Add Custom Field
                     </button>
                   </div>
                 </div>
@@ -637,26 +569,27 @@ const ContentAdminDescription = () => {
           ))}
 
           <h5>Document Requirements</h5>
-          {documentOptions[programType].map((doc) => (
+          {(documentOptions[programType] || []).map((doc) => (
             <div key={doc} className="checkbox-item">
               <input
                 type="checkbox"
+                id={`doc-${doc.replace(/\s+/g, '-')}`}
                 checked={requiredDocuments.includes(doc)}
                 onChange={() => toggleDocument(doc)}
               />
-              <label>{doc}</label>
+              <label htmlFor={`doc-${doc.replace(/\s+/g, '-')}`}>{doc}</label>
             </div>
           ))}
-
-          <button className="submit-modified-button" onClick={handleSave}>
-            Submit Modified Application
+          <button type="button" className="submit-modified-button" onClick={handleSave}>
+            Save Modified Form Structure (and Description)
           </button>
         </div>
       )}
-
-      <button className="btn btn-primary" onClick={handleSave}>
-        Save Description
-      </button>
+      {!showModifyForm && (
+        <button type="button" className="btn btn-primary" onClick={handleSave} style={{ marginTop: "20px" }}>
+          Save Description & Current Form Settings
+        </button>
+      )}
     </div>
   );
 };

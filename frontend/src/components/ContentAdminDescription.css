@@ -158,8 +158,44 @@
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.alert-popup.success {
+  background-color: #4CAF50;
+}
+
+.alert-popup.error {
+  background-color: #f44336;
+}
+
+/* Add styles for radio buttons */
+.radio-label {
+  margin-right: 15px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.radio-label input[type="radio"] {
+  margin-right: 5px;
+  width: auto;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 0.9rem;
 }

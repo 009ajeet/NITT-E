@@ -5,6 +5,7 @@ const { auth, authorize } = require("../middleware/auth");
 const UserModel = require("../models/User");
 const ApplicationForm = require("../models/ApplicationForm");
 const CourseModel = require("../models/Course");
+const bcrypt = require("bcryptjs"); // Added bcrypt
 
 router.get("/users", auth, authorize(["verification_admin"]), async (req, res) => {
   try {
@@ -89,8 +90,8 @@ router.put("/users/:id/verify", auth, authorize(["verification_admin"]), async (
     }
     const user = await UserModel.findByIdAndUpdate(
       id,
-      { 
-        verified, 
+      {
+        verified,
         verifiedBy: verified ? req.user.userId : null,
         verificationComment: verified ? verificationComment || "" : ""
       },
@@ -226,7 +227,7 @@ router.post("/courses/:courseId/assign-officers", auth, authorize(["verification
     // Distribute applications among officers
     let officerIndex = 0;
     const assignments = [];
-    
+
     for (let i = 0; i < validApplications.length; i += batchSize) {
       const currentOfficer = officers[officerIndex % officers.length];
       const batch = validApplications.slice(i, i + batchSize);
@@ -389,6 +390,65 @@ router.get("/applications", auth, authorize(["verification_admin"]), async (req,
     res.status(500).json({
       message: "Failed to fetch applications",
       error: process.env.NODE_ENV === "development" ? error.message : "Internal server error",
+    });
+  }
+});
+
+// Route to create a new verification officer and assign to a course
+router.post("/create-officer", auth, authorize(["verification_admin"]), async (req, res) => {
+  const { name, email, password, courseId } = req.body;
+
+  if (!name || !email || !password || !courseId) {
+    return res.status(400).json({ message: "Name, email, password, and courseId are required" });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(courseId)) {
+    return res.status(400).json({ message: "Invalid course ID" });
+  }
+
+  try {
+    // Check if user already exists
+    let existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
+    // Check if course exists
+    const course = await CourseModel.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newOfficer = new UserModel({
+      name,
+      email,
+      password: hashedPassword,
+      role: "verification_officer",
+      courses: [courseId], // Assign to the specified course
+      verified: true, // Verification officers created by admin are verified by default
+    });
+
+    await newOfficer.save();
+
+    res.status(201).json({
+      message: "Verification officer created successfully and assigned to course",
+      officer: {
+        _id: newOfficer._id,
+        name: newOfficer.name,
+        email: newOfficer.email,
+        role: newOfficer.role,
+        courses: newOfficer.courses
+      }
+    });
+
+  } catch (error) {
+    console.error("Error creating verification officer:", error);
+    res.status(500).json({
+      message: "Failed to create verification officer",
+      error: process.env.NODE_ENV === "development" ? error.message : "Internal server error"
     });
   }
 });

@@ -48,7 +48,7 @@ const VerificationOfficerDashboard = () => {
   const fetchOfficerProfile = async () => {
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/verification-officer/profile`,
+        `${API_BASE_URL}/api/verification-officer/profile`,
         getAuthHeaders()
       );
       setOfficerName(res.data.name || "Officer");
@@ -56,7 +56,7 @@ const VerificationOfficerDashboard = () => {
       console.error("Error fetching officer profile:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to load officer profile. Using default name."
+        "Failed to load officer profile. Using default name."
       );
     }
   };
@@ -64,7 +64,7 @@ const VerificationOfficerDashboard = () => {
   const fetchAssignedApplications = async () => {
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/verification-officer/assigned-applications`,
+        `${API_BASE_URL}/api/verification-officer/assigned-applications`,
         getAuthHeaders()
       );
       setAssignedApplications(res.data);
@@ -72,7 +72,7 @@ const VerificationOfficerDashboard = () => {
       console.error("Failed to fetch applications:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to load assigned applications. Please try again."
+        "Failed to load assigned applications. Please try again."
       );
     } finally {
       setLoading(false);
@@ -87,7 +87,7 @@ const VerificationOfficerDashboard = () => {
         setVerificationError("Please open student details and check all required fields before verifying.");
         return;
       }
-      
+
       // For verification, check if all checkboxes are checked
       const allChecked = Object.values(checkboxes).every((checked) => checked);
       if (!allChecked) {
@@ -101,7 +101,7 @@ const VerificationOfficerDashboard = () => {
 
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/verification-officer/verify-application/${applicationId}`,
+        `${API_BASE_URL}/api/verification-officer/verify-application/${applicationId}`,
         { verified, comments },
         getAuthHeaders()
       );
@@ -118,16 +118,16 @@ const VerificationOfficerDashboard = () => {
       prev.map((app) =>
         app._id === applicationId
           ? {
-              ...app,
-              verified,
-              formData: {
-                ...app.formData,
-                verificationStatus: verified ? "verified" : "rejected",
-                verificationComments: comments,
-              },
-              verifiedBy: verified ? { name: officerName, role: "verification_officer" } : null,
-              studentId: { ...app.studentId, verified, verifiedBy: verified ? { name: officerName } : null },
-            }
+            ...app,
+            verified,
+            formData: {
+              ...app.formData,
+              verificationStatus: verified ? "verified" : "rejected",
+              verificationComments: comments,
+            },
+            verifiedBy: verified ? { name: officerName, role: "verification_officer" } : null,
+            studentId: { ...app.studentId, verified, verifiedBy: verified ? { name: officerName } : null },
+          }
           : app
       )
     );
@@ -155,7 +155,7 @@ const VerificationOfficerDashboard = () => {
     console.error("Error updating application verification:", err);
     setVerificationError(
       err.response?.data?.message ||
-        "Failed to update application verification. Please try again."
+      "Failed to update application verification. Please try again."
     );
   };
 
@@ -164,23 +164,23 @@ const VerificationOfficerDashboard = () => {
       ...student,
       application: application
         ? {
-            ...application,
-            courseTitle: application.courseId?.title,
-            formData: application.formData,
-            educationDetails: application.educationDetails,
-          }
+          ...application,
+          courseTitle: application.courseId?.title,
+          formData: application.formData,
+          educationDetails: application.educationDetails,
+        }
         : null,
     });
-    
+
     // Initialize checkboxes based on the application data
     const initialCheckboxes = {};
-    
+
     // Add personal details checkboxes
     initialCheckboxes.fullName = false;
     initialCheckboxes.email = false;
     initialCheckboxes.phoneNumber = false;
     initialCheckboxes.currentAddress = false;
-    
+
     // Add education details checkboxes if they exist
     if (application?.educationDetails) {
       if (application.educationDetails.tenth?.length > 0) {
@@ -196,14 +196,14 @@ const VerificationOfficerDashboard = () => {
         initialCheckboxes.postgraduate = false;
       }
     }
-    
+
     // Add document checkboxes if they exist
     if (application?.formData?.documents?.length > 0) {
       application.formData.documents.forEach((_, index) => {
         initialCheckboxes[`document_${index}`] = false;
       });
     }
-    
+
     setCheckboxes(initialCheckboxes);
     setComments("");
     setError(null);
@@ -219,7 +219,7 @@ const VerificationOfficerDashboard = () => {
 
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/Uploads/applications/${filename}`,
+        `${API_BASE_URL}/api/Uploads/applications/${filename}`,
         {
           ...getAuthHeaders(),
           responseType: "blob",
@@ -239,7 +239,7 @@ const VerificationOfficerDashboard = () => {
       console.error("Error fetching document:", err);
       setError(
         err.response?.data?.message ||
-          `Failed to load document "${originalName}". Please try again.`
+        `Failed to load document "${originalName}". Please try again.`
       );
     }
   };
@@ -384,15 +384,15 @@ const VerificationOfficerDashboard = () => {
         <div className="vo-student-details-modal">
           <div className="vo-modal-content">
             <h2>Student Application Details</h2>
-            
+
             {selectedStudent.application && !selectedStudent.application.verified && (
               <div className="vo-verification-progress">
                 <div className="vo-progress-text">
                   Verification Progress: {Math.round(checkboxProgress)}%
                 </div>
                 <div className="vo-progress-bar">
-                  <div 
-                    className="vo-progress-fill" 
+                  <div
+                    className="vo-progress-fill"
                     style={{ width: `${checkboxProgress}%` }}
                   ></div>
                 </div>
@@ -401,7 +401,7 @@ const VerificationOfficerDashboard = () => {
                 </div>
               </div>
             )}
-            
+
             <div className="vo-student-details-grid">
               <div className="vo-details-section">
                 <h3>Personal Details</h3>
@@ -570,8 +570,8 @@ const VerificationOfficerDashboard = () => {
                             {level === "tenth"
                               ? "10th"
                               : level === "twelth"
-                              ? "12th"
-                              : level.charAt(0).toUpperCase() + level.slice(1)}
+                                ? "12th"
+                                : level.charAt(0).toUpperCase() + level.slice(1)}
                             <input
                               type="checkbox"
                               checked={checkboxes[level] || false}

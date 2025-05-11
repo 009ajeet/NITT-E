@@ -57,7 +57,7 @@ const VerificationAdminDashboard = () => {
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/verification-admin/users`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE_URL}/api/verification-admin/users`, getAuthHeaders());
       const studentData = res.data.filter((user) => user.role === "student");
       setStudents(studentData);
       setError(null);
@@ -73,7 +73,7 @@ const VerificationAdminDashboard = () => {
   const fetchCourses = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/courses`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE_URL}/api/courses`, getAuthHeaders());
       setCourses(res.data || []);
       setError(null);
     } catch (err) {
@@ -88,7 +88,7 @@ const VerificationAdminDashboard = () => {
   const fetchVerificationOfficers = useCallback(async () => {
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/verification-admin/verification-officers`,
+        `${API_BASE_URL}/api/verification-admin/verification-officers`,
         getAuthHeaders()
       );
       setVerificationOfficers(res.data || []);
@@ -106,7 +106,7 @@ const VerificationAdminDashboard = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/verification-admin/applications`,
+        `${API_BASE_URL}/api/verification-admin/applications`,
         getAuthHeaders()
       );
       console.log("Fetched applications:", res.data); // Debug API response
@@ -132,14 +132,14 @@ const VerificationAdminDashboard = () => {
       try {
         // Fetch application stats for debugging
         const statsRes = await axios.get(
-          `${API_BASE_URL}/verification-admin/courses/${courseId}/applications-count`,
+          `${API_BASE_URL}/api/verification-admin/courses/${courseId}/applications-count`,
           getAuthHeaders()
         );
         console.log("Application stats:", statsRes.data);
 
         // Fetch applications for the selected course
         const appRes = await axios.get(
-          `${API_BASE_URL}/verification-admin/applications`,
+          `${API_BASE_URL}/api/verification-admin/applications`,
           getAuthHeaders()
         );
         const courseApps = appRes.data.filter((app) => app.courseId?._id === courseId) || [];
@@ -175,7 +175,7 @@ const VerificationAdminDashboard = () => {
     setCourseApplications([]);
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/verification-admin/courses/${selectedCourse._id}/assign-officers`,
+        `${API_BASE_URL}/api/verification-admin/courses/${selectedCourse._id}/assign-officers`,
         { batchSize },
         getAuthHeaders()
       );
@@ -203,7 +203,7 @@ const VerificationAdminDashboard = () => {
     setCourseApplications([]);
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/verification-admin/courses/${selectedCourse._id}/unassign-officers`,
+        `${API_BASE_URL}/api/verification-admin/courses/${selectedCourse._id}/unassign-officers`,
         {},
         getAuthHeaders()
       );

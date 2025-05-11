@@ -22,6 +22,15 @@ const VerificationAdminDashboard = () => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isUnassigning, setIsUnassigning] = useState(false);
 
+  // State for creating a new verification officer
+  const [newOfficerName, setNewOfficerName] = useState("");
+  const [newOfficerEmail, setNewOfficerEmail] = useState("");
+  const [newOfficerPassword, setNewOfficerPassword] = useState("");
+  const [selectedCourseForNewOfficer, setSelectedCourseForNewOfficer] = useState("");
+  const [isCreatingOfficer, setIsCreatingOfficer] = useState(false);
+  const [createOfficerError, setCreateOfficerError] = useState(null);
+  const [createOfficerSuccess, setCreateOfficerSuccess] = useState(null);
+
   // Toggle theme between light and dark
   const toggleTheme = useCallback(() => {
     const newTheme = theme === "light" ? "dark" : "light";
@@ -221,6 +230,44 @@ const VerificationAdminDashboard = () => {
     }
   }, [selectedCourse, fetchCourseData, fetchStudents, fetchApplications, getAuthHeaders]);
 
+  // Handle creating a new verification officer
+  const handleCreateOfficer = useCallback(async (e) => {
+    e.preventDefault();
+    if (!newOfficerName || !newOfficerEmail || !newOfficerPassword || !selectedCourseForNewOfficer) {
+      setCreateOfficerError("All fields are required to create an officer.");
+      setCreateOfficerSuccess(null);
+      return;
+    }
+    setIsCreatingOfficer(true);
+    setCreateOfficerError(null);
+    setCreateOfficerSuccess(null);
+    try {
+      const res = await axios.post(
+        `${API_BASE_URL}/api/verification-admin/create-officer`,
+        {
+          name: newOfficerName,
+          email: newOfficerEmail,
+          password: newOfficerPassword,
+          courseId: selectedCourseForNewOfficer,
+        },
+        getAuthHeaders()
+      );
+      setCreateOfficerSuccess(res.data.message || "Verification officer created successfully!");
+      setNewOfficerName("");
+      setNewOfficerEmail("");
+      setNewOfficerPassword("");
+      setSelectedCourseForNewOfficer("");
+      fetchVerificationOfficers(); // Refresh the list of officers
+    } catch (err) {
+      console.error("Error creating verification officer:", err);
+      setCreateOfficerError(
+        err.response?.data?.message || "Failed to create verification officer. Please try again."
+      );
+    } finally {
+      setIsCreatingOfficer(false);
+    }
+  }, [newOfficerName, newOfficerEmail, newOfficerPassword, selectedCourseForNewOfficer, getAuthHeaders, fetchVerificationOfficers]);
+
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
@@ -309,6 +356,64 @@ const VerificationAdminDashboard = () => {
             <p>Unverified Applications</p>
           </div>
         </div>
+      </section>
+
+      {/* Section to Create Verification Officer */}
+      <section className="va-create-officer-section">
+        <h2>Create Verification Officer</h2>
+        {createOfficerSuccess && <div className="va-success-message">{createOfficerSuccess}</div>}
+        {createOfficerError && <div className="va-error-message">{createOfficerError}</div>}
+        <form onSubmit={handleCreateOfficer} className="va-create-officer-form">
+          <div className="va-form-group">
+            <label htmlFor="officerName">Name:</label>
+            <input
+              type="text"
+              id="officerName"
+              value={newOfficerName}
+              onChange={(e) => setNewOfficerName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="va-form-group">
+            <label htmlFor="officerEmail">Email:</label>
+            <input
+              type="email"
+              id="officerEmail"
+              value={newOfficerEmail}
+              onChange={(e) => setNewOfficerEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="va-form-group">
+            <label htmlFor="officerPassword">Password:</label>
+            <input
+              type="password"
+              id="officerPassword"
+              value={newOfficerPassword}
+              onChange={(e) => setNewOfficerPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="va-form-group">
+            <label htmlFor="officerCourse">Assign to Course:</label>
+            <select
+              id="officerCourse"
+              value={selectedCourseForNewOfficer}
+              onChange={(e) => setSelectedCourseForNewOfficer(e.target.value)}
+              required
+            >
+              <option value="">Select a Course</option>
+              {courses.map((course) => (
+                <option key={course._id} value={course._id}>
+                  {course.title || "Untitled Course"}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button type="submit" className="va-btn-create-officer" disabled={isCreatingOfficer}>
+            {isCreatingOfficer ? "Creating..." : "Create Officer"}
+          </button>
+        </form>
       </section>
 
       {courses.length > 0 && (

@@ -491,11 +491,102 @@
     animation: va-shake 0.5s ease;
 }
 
+/* Styles for Create Officer Section */
+.va-create-officer-section {
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    margin-top: 30px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.va-create-officer-section h2 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.va-create-officer-form .va-form-group {
+    margin-bottom: 15px;
+}
+
+.va-create-officer-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.va-create-officer-form input[type="text"],
+.va-create-officer-form input[type="email"],
+.va-create-officer-form input[type="password"],
+.va-create-officer-form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.95rem;
+}
+
+.va-create-officer-form select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23${encodeURIComponent(getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim())}'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 35px;
+}
+
+.va-btn-create-officer {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    display: block;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.va-btn-create-officer:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.va-btn-create-officer:disabled {
+    background: var(--text-secondary);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.va-success-message {
+    background-color: var(--success-color);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
 /* Animations */
 @keyframes va-spin {
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -506,6 +597,7 @@
         opacity: 0;
         transform: translateY(20px) scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -513,13 +605,24 @@
 }
 
 @keyframes va-shake {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateX(0);
     }
-    10%, 30%, 50%, 70%, 90% {
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
         transform: translateX(-5px);
     }
-    20%, 40%, 60%, 80% {
+
+    20%,
+    40%,
+    60%,
+    80% {
         transform: translateX(5px);
     }
 }
@@ -529,6 +632,7 @@
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

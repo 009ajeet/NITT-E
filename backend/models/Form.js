@@ -9,7 +9,7 @@ const formSchema = new mongoose.Schema({
   programType: {
     type: String,
     enum: ["UG", "PG"],
-    default: null,
+    required: true // Changed from default: null to required: true
   },
   educationFields: {
     tenth: { type: Boolean, default: false },

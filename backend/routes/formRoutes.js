@@ -9,12 +9,31 @@ const { auth, authorize } = require("../middleware/auth");
  */
 router.post("/save-form-structure", auth, authorize(["content_admin"]), async (req, res) => {
   try {
-    const { courseId, educationFields, sections, requiredAcademicFields, requiredAcademicSubfields, requiredDocuments, programType } = req.body;
-    console.log("Received save-form-structure request:", req.body);
+    const { courseId } = req.body; // courseId is at the root of the payload
+    const formStructureData = req.body.formStructure; // The rest of the form data is in this nested object
 
-    // Validate inputs
+    console.log("Received save-form-structure request body:", JSON.stringify(req.body, null, 2));
+
     if (!courseId) {
       return res.status(400).json({ message: "Course ID is required" });
+    }
+    if (!formStructureData) {
+      return res.status(400).json({ message: "formStructure object is required in the payload" });
+    }
+
+    // Destructure fields from formStructureData
+    const {
+      educationFields,
+      sections,
+      requiredAcademicFields,
+      requiredAcademicSubfields,
+      requiredDocuments,
+      programType // This will now be correctly extracted
+    } = formStructureData;
+
+    // Validate programType specifically, as it's critical
+    if (!programType || !["UG", "PG"].includes(programType)) {
+      return res.status(400).json({ message: "Valid programType ('UG' or 'PG') is required within formStructure." });
     }
 
     // Check if the course exists
@@ -27,12 +46,14 @@ router.post("/save-form-structure", auth, authorize(["content_admin"]), async (r
     let form = await Form.findOne({ courseId });
     if (form) {
       // Update existing form
-      form.programType = programType || form.programType;
-      form.educationFields = educationFields || form.educationFields;
-      form.sections = sections || form.sections;
-      form.requiredAcademicFields = requiredAcademicFields || form.requiredAcademicFields;
-      form.requiredAcademicSubfields = requiredAcademicSubfields || form.requiredAcademicSubfields;
-      form.requiredDocuments = requiredDocuments || form.requiredDocuments;
+      form.programType = programType; // Always update from formStructureData
+      form.educationFields = educationFields !== undefined ? educationFields : form.educationFields;
+      form.sections = sections !== undefined ? sections : form.sections;
+      form.requiredAcademicFields = requiredAcademicFields !== undefined ? requiredAcademicFields : form.requiredAcademicFields;
+      form.requiredAcademicSubfields = requiredAcademicSubfields !== undefined ? requiredAcademicSubfields : form.requiredAcademicSubfields;
+      form.requiredDocuments = requiredDocuments !== undefined ? requiredDocuments : form.requiredDocuments;
+
+      console.log("Attempting to update form with data:", JSON.stringify(form.toObject(), null, 2));
       await form.save();
       console.log("Updated form with subfields:", form.requiredAcademicSubfields);
       return res.status(200).json({ message: "Form structure updated successfully", form });
@@ -41,8 +62,8 @@ router.post("/save-form-structure", auth, authorize(["content_admin"]), async (r
     // Create new form structure
     form = new Form({
       courseId,
-      programType,
-      educationFields: educationFields || { tenth: false, twelfth: false, ug: false, pg: false },
+      programType, // From formStructureData
+      educationFields: educationFields || { tenth: false, twelth: false, ug: false, pg: false },
       sections: sections || [],
       requiredAcademicFields: requiredAcademicFields || [],
       requiredAcademicSubfields: requiredAcademicSubfields || {
@@ -77,11 +98,20 @@ router.post("/save-form-structure", auth, authorize(["content_admin"]), async (r
       },
       requiredDocuments: requiredDocuments || [],
     });
+    console.log("Attempting to create new form with data:", JSON.stringify(form.toObject(), null, 2));
     await form.save();
     console.log("Created new form with subfields:", form.requiredAcademicSubfields);
     res.status(201).json({ message: "Form structure saved successfully", form });
   } catch (error) {
-    console.error("Error saving form structure:", error);
+    console.error("Error saving form structure. Details:", error); // Log the full error
+    // Send a more detailed error message if it's a validation error
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: "Form validation failed. Please check the provided data.",
+        error: error.message, // Mongoose's detailed validation error message
+        errors: error.errors // Detailed breakdown of field errors
+      });
+    }
     res.status(500).json({ message: "Server error while saving form structure", error: error.message });
   }
 });

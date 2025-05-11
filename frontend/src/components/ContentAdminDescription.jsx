@@ -92,7 +92,7 @@ const ContentAdminDescription = () => {
         .catch((err) => console.error("Error fetching course details:", err));
 
       axios
-        .get(`${API_BASE_URL}/api/get-form-structure/${courseId}`, {
+        .get(`${API_BASE_URL}/api/forms/get-form-structure/${courseId}`, { // Changed this line
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
         .then((res) => {

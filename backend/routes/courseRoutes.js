@@ -9,28 +9,39 @@ const { auth, authorize } = require("../middleware/auth");
 const router = express.Router();
 
 // Helper function to create a user
-const createUser = async (email, password, role, courseId, session) => { // Added session parameter
-  const existingUser = await UserModel.findOne({ email }).session(session); // Use session
+const createUser = async (email, password, role, courseId, session) => {
+  let existingUser = await UserModel.findOne({ email }).session(session); // Use let to allow reassignment if needed for clarity, though not strictly necessary here
+
   if (existingUser) {
+    // User exists. Crucially, update their role to the one being assigned for this context.
+    // This ensures that if a main admin email is used, their role is effectively scoped
+    // to content_admin or verification_admin for course-specific tasks.
+    existingUser.role = role;
+
     if (!existingUser.courses.includes(courseId)) {
       existingUser.courses.push(courseId);
     }
-    await existingUser.save({ session }); // Use session
+    // Ensure users assigned these specific admin roles are marked as verified.
+    if (role === 'content_admin' || role === 'verification_admin') {
+      existingUser.verified = true;
+    }
+    await existingUser.save({ session });
     return existingUser;
+  } else {
+    // New user: hash password and create
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newUser = new UserModel({
+      name: email.split('@')[0], // Basic name generation
+      email,
+      password: hashedPassword,
+      role, // Set the role for the new user
+      courses: [courseId], // Assign only the current courseId
+      verified: true, // Admins created this way are pre-verified by default
+    });
+    await newUser.save({ session });
+    return newUser;
   }
-
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  const newUser = new UserModel({
-    name: email.split('@')[0],
-    email,
-    password: hashedPassword,
-    role,
-    courses: [courseId],
-    verified: true,
-  });
-  await newUser.save({ session }); // Use session
-  return newUser;
 };
 
 // Fetch all courses (filtered for content admins by assignedTo email, requires authentication)

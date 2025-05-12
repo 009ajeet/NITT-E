@@ -161,17 +161,24 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
 
 // Fetch all courses (filtered for content admins by assignedTo email, requires authentication)
 router.get("/", auth, async (req, res) => {
-  console.log("[GET /api/courses] User making request:", JSON.stringify(req.user)); // Log the user object
+  console.log("[GET /api/courses] User making request:", JSON.stringify(req.user));
   try {
     let courses;
+    console.log(`[GET /api/courses] User role from req.user: ${req.user.role}`);
+
+    // Add Cache-Control Headers
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     if (req.user.role === "content_admin") {
-      console.log(`[GET /api/courses] User role is content_admin. Fetching courses assigned to contentAdmin: ${req.user._id}`);
-      courses = await CourseModel.find({ contentAdmin: req.user._id });
+      console.log(`[GET /api/courses] User is content_admin. Fetching courses for contentAdmin ID: ${req.user.userId}`); // Changed to req.user.userId
+      courses = await CourseModel.find({ contentAdmin: req.user.userId }); // Changed to req.user.userId
     } else if (req.user.role === "verification_admin") {
-      console.log(`[GET /api/courses] User role is verification_admin. Fetching courses assigned to verificationAdmin: ${req.user._id}`);
-      courses = await CourseModel.find({ verificationAdmin: req.user._id });
+      console.log(`[GET /api/courses] User is verification_admin. Fetching courses for verificationAdmin ID: ${req.user.userId}`); // Changed to req.user.userId
+      courses = await CourseModel.find({ verificationAdmin: req.user.userId }); // Changed to req.user.userId
     } else if (req.user.role === "admin" || req.user.role === "student") {
-      console.log(`[GET /api/courses] User role is ${req.user.role}. Fetching all courses.`);
+      console.log(`[GET /api/courses] User is ${req.user.role}. Fetching all courses.`);
       courses = await CourseModel.find();
     } else {
       console.log(`[GET /api/courses] User role ${req.user.role} has no specific course view. Access denied.`);

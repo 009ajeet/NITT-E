@@ -9,16 +9,13 @@ const { auth, authorize } = require("../middleware/auth");
 const router = express.Router();
 
 // Helper function to create a user
-const createUser = async (email, password, role, courseId) => {
-  const existingUser = await UserModel.findOne({ email });
+const createUser = async (email, password, role, courseId, session) => { // Added session parameter
+  const existingUser = await UserModel.findOne({ email }).session(session); // Use session
   if (existingUser) {
-    if (existingUser.role === role && existingUser.courses.includes(courseId)) {
-      return existingUser; // User already exists and is assigned
-    }
     if (!existingUser.courses.includes(courseId)) {
       existingUser.courses.push(courseId);
     }
-    await existingUser.save();
+    await existingUser.save({ session }); // Use session
     return existingUser;
   }
 
@@ -32,7 +29,7 @@ const createUser = async (email, password, role, courseId) => {
     courses: [courseId],
     verified: true,
   });
-  await newUser.save();
+  await newUser.save({ session }); // Use session
   return newUser;
 };
 
@@ -77,7 +74,9 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
   const {
     title, description, duration, fee, requirement, contact, subjectCode,
     contentAdminEmail, contentAdminPassword,
-    verificationAdminEmail, verificationAdminPassword
+    verificationAdminEmail, verificationAdminPassword,
+    details, programDescription, image1, image2, vision, mission,
+    yearsOfDepartment, syllabus, programEducationalObjectives, programOutcomes, programType
   } = req.body;
 
   console.log("Received course data:", req.body);
@@ -104,16 +103,17 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(contentAdminEmail)) missingFields.push("invalid contentAdminEmail format");
-  if (!emailRegex.test(verificationAdminEmail)) missingFields.push("invalid verificationAdminEmail format");
+  const validationErrors = [];
+  if (!emailRegex.test(contentAdminEmail)) validationErrors.push("invalid contentAdminEmail format");
+  if (!emailRegex.test(verificationAdminEmail)) validationErrors.push("invalid verificationAdminEmail format");
 
-  if (contentAdminPassword.length < 6) missingFields.push("contentAdminPassword too short (min 6 chars)");
-  if (verificationAdminPassword.length < 6) missingFields.push("verificationAdminPassword too short (min 6 chars)");
+  if (contentAdminPassword.length < 6) validationErrors.push("contentAdminPassword too short (min 6 chars)");
+  if (verificationAdminPassword.length < 6) validationErrors.push("verificationAdminPassword too short (min 6 chars)");
 
-  if (missingFields.length > 0) {
+  if (validationErrors.length > 0) {
     return res.status(400).json({
       message: "Validation errors",
-      errors: missingFields,
+      errors: validationErrors,
     });
   }
 
@@ -121,40 +121,59 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
   session.startTransaction();
 
   try {
-    const tempCourse = new CourseModel({ title: "temp" });
-    const savedTempCourse = await tempCourse.save({ session });
-    const courseId = savedTempCourse._id;
+    const courseData = {
+      title: title.trim(),
+      description: description.trim(),
+      duration: Number(duration),
+      fee: Number(fee),
+      requirement: requirement.trim(),
+      contact: contact.trim(),
+      subjectCode: subjectCode.trim(),
+      details: details?.trim(),
+      programDescription: programDescription?.trim(),
+      image1: image1?.trim(),
+      image2: image2?.trim(),
+      vision: vision?.trim(),
+      mission: mission?.trim(),
+      yearsOfDepartment: yearsOfDepartment ? Number(yearsOfDepartment) : undefined,
+      syllabus: syllabus,
+      programEducationalObjectives: programEducationalObjectives,
+      programOutcomes: programOutcomes,
+      programType: programType?.trim()
+    };
 
-    const contentAdminUser = await createUser(contentAdminEmail, contentAdminPassword, "content_admin", courseId);
-    const verificationAdminUser = await createUser(verificationAdminEmail, verificationAdminPassword, "verification_admin", courseId);
+    Object.keys(courseData).forEach(key => courseData[key] === undefined && delete courseData[key]);
 
-    const updatedCourse = await CourseModel.findByIdAndUpdate(
-      courseId,
-      {
-        title: title.trim(),
-        description: description.trim(),
-        duration: Number(duration),
-        fee: Number(fee),
-        requirement: requirement.trim(),
-        contact: contact.trim(),
-        subjectCode: subjectCode.trim(),
-        contentAdmin: contentAdminUser._id,
-        verificationAdmin: verificationAdminUser._id,
-      },
-      { new: true, session }
-    );
+    const initialCourse = new CourseModel(courseData);
+    const savedCourse = await initialCourse.save({ session });
+    const courseId = savedCourse._id;
 
-    console.log("New course saved with admins:", updatedCourse);
+    const contentAdminUser = await createUser(contentAdminEmail, contentAdminPassword, "content_admin", courseId, session);
+    const verificationAdminUser = await createUser(verificationAdminEmail, verificationAdminPassword, "verification_admin", courseId, session);
+
+    savedCourse.contentAdmin = contentAdminUser._id;
+    savedCourse.verificationAdmin = verificationAdminUser._id;
+
+    const finalCourse = await savedCourse.save({ session });
+
+    console.log("New course saved with admins:", finalCourse);
 
     await session.commitTransaction();
 
     res.status(201).json({
       message: "Course added successfully, and admin accounts created/assigned.",
-      course: updatedCourse,
+      course: finalCourse,
     });
   } catch (error) {
     await session.abortTransaction();
     console.error("Error adding course and creating admins:", error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: "Validation error while saving course.",
+        error: error.message,
+        details: error.errors
+      });
+    }
     res.status(500).json({
       message: "Error adding course and creating admins",
       error: error.message,

@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose"); // Added mongoose import
 const CourseModel = require("../models/Course");
 const FormModel = require("../models/Form");
 const UserModel = require("../models/User"); // Import User model

@@ -9,8 +9,18 @@ const courseSchema = new mongoose.Schema({
   contact: { type: String, required: true },
   requirement: { type: String, required: true },
   subjectCode: { type: String, required: true },
-  assignedTo: { type: String, required: true }, // New field for content admin email
-  assignedVerificationAdminEmail: { type: String, required: true }, // New field for verification admin email
+  // assignedTo: { type: String, required: true }, // Old field for content admin email
+  // assignedVerificationAdminEmail: { type: String, required: true }, // Old field for verification admin email
+
+  contentAdmin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  verificationAdmin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+
   programDescription: { type: String },
   image1: { type: String },
   image2: { type: String },

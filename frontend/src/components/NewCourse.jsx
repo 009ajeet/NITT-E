@@ -13,8 +13,12 @@ const NewCourse = () => {
     requirement: "",
     contact: "",
     subjectCode: "",
-    assignedTo: "", // New field
-    assignedVerificationAdminEmail: "", // New field for Verification Admin
+    // assignedTo: "", // Old field
+    // assignedVerificationAdminEmail: "", // Old field
+    contentAdminEmail: "",
+    contentAdminPassword: "",
+    verificationAdminEmail: "",
+    verificationAdminPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [user, setUser] = useState(null);
@@ -50,8 +54,17 @@ const NewCourse = () => {
     if (!courseData.requirement.trim()) newErrors.requirement = "Requirements are required";
     if (!courseData.contact.trim()) newErrors.contact = "Contact Details are required";
     if (!courseData.subjectCode.trim()) newErrors.subjectCode = "Subject Code is required";
-    if (!courseData.assignedTo.trim()) newErrors.assignedTo = "Assigned Content Admin email is required";
-    if (!courseData.assignedVerificationAdminEmail.trim()) newErrors.assignedVerificationAdminEmail = "Assigned Verification Admin email is required";
+    // if (!courseData.assignedTo.trim()) newErrors.assignedTo = "Assigned Content Admin email is required"; // Old validation
+    // if (!courseData.assignedVerificationAdminEmail.trim()) newErrors.assignedVerificationAdminEmail = "Assigned Verification Admin email is required"; // Old validation
+    if (!courseData.contentAdminEmail.trim()) newErrors.contentAdminEmail = "Content Admin Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(courseData.contentAdminEmail)) newErrors.contentAdminEmail = "Invalid Content Admin Email format";
+    if (!courseData.contentAdminPassword.trim()) newErrors.contentAdminPassword = "Content Admin Password is required";
+    else if (courseData.contentAdminPassword.length < 6) newErrors.contentAdminPassword = "Content Admin Password must be at least 6 characters";
+
+    if (!courseData.verificationAdminEmail.trim()) newErrors.verificationAdminEmail = "Verification Admin Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(courseData.verificationAdminEmail)) newErrors.verificationAdminEmail = "Invalid Verification Admin Email format";
+    if (!courseData.verificationAdminPassword.trim()) newErrors.verificationAdminPassword = "Verification Admin Password is required";
+    else if (courseData.verificationAdminPassword.length < 6) newErrors.verificationAdminPassword = "Verification Admin Password must be at least 6 characters";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -79,8 +92,12 @@ const NewCourse = () => {
       requirement: courseData.requirement,
       contact: courseData.contact,
       subjectCode: courseData.subjectCode,
-      assignedTo: courseData.assignedTo,
-      assignedVerificationAdminEmail: courseData.assignedVerificationAdminEmail,
+      // assignedTo: courseData.assignedTo, // Old field
+      // assignedVerificationAdminEmail: courseData.assignedVerificationAdminEmail, // Old field
+      contentAdminEmail: courseData.contentAdminEmail,
+      contentAdminPassword: courseData.contentAdminPassword,
+      verificationAdminEmail: courseData.verificationAdminEmail,
+      verificationAdminPassword: courseData.verificationAdminPassword,
     };
 
     try {
@@ -188,24 +205,45 @@ const NewCourse = () => {
           required
         />
         {errors.subjectCode && <div className="error">{errors.subjectCode}</div>}
+
         <input
           type="email"
-          name="assignedTo"
-          placeholder="Assigned Content Admin Email"
-          value={courseData.assignedTo}
+          name="contentAdminEmail"
+          placeholder="Content Admin Email"
+          value={courseData.contentAdminEmail}
           onChange={handleChange}
           required
         />
-        {errors.assignedTo && <div className="error">{errors.assignedTo}</div>}
+        {errors.contentAdminEmail && <div className="error">{errors.contentAdminEmail}</div>}
         <input
-          type="email"
-          name="assignedVerificationAdminEmail"
-          placeholder="Assigned Verification Admin Email"
-          value={courseData.assignedVerificationAdminEmail}
+          type="password"
+          name="contentAdminPassword"
+          placeholder="Content Admin Password (min 6 chars)"
+          value={courseData.contentAdminPassword}
           onChange={handleChange}
           required
         />
-        {errors.assignedVerificationAdminEmail && <div className="error">{errors.assignedVerificationAdminEmail}</div>}
+        {errors.contentAdminPassword && <div className="error">{errors.contentAdminPassword}</div>}
+
+        <input
+          type="email"
+          name="verificationAdminEmail"
+          placeholder="Verification Admin Email"
+          value={courseData.verificationAdminEmail}
+          onChange={handleChange}
+          required
+        />
+        {errors.verificationAdminEmail && <div className="error">{errors.verificationAdminEmail}</div>}
+        <input
+          type="password"
+          name="verificationAdminPassword"
+          placeholder="Verification Admin Password (min 6 chars)"
+          value={courseData.verificationAdminPassword}
+          onChange={handleChange}
+          required
+        />
+        {errors.verificationAdminPassword && <div className="error">{errors.verificationAdminPassword}</div>}
+
         <button type="submit">Add Course</button>
       </form>
     </div>

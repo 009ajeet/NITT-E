@@ -1,19 +1,49 @@
 const express = require("express");
 const CourseModel = require("../models/Course");
 const FormModel = require("../models/Form");
+const UserModel = require("../models/User"); // Import User model
+const bcrypt = require("bcryptjs"); // Import bcrypt for password hashing
 const { auth, authorize } = require("../middleware/auth");
 
 const router = express.Router();
+
+// Helper function to create a user
+const createUser = async (email, password, role, courseId) => {
+  const existingUser = await UserModel.findOne({ email });
+  if (existingUser) {
+    if (existingUser.role === role && existingUser.courses.includes(courseId)) {
+      return existingUser; // User already exists and is assigned
+    }
+    if (!existingUser.courses.includes(courseId)) {
+      existingUser.courses.push(courseId);
+    }
+    await existingUser.save();
+    return existingUser;
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+  const newUser = new UserModel({
+    name: email.split('@')[0],
+    email,
+    password: hashedPassword,
+    role,
+    courses: [courseId],
+    verified: true,
+  });
+  await newUser.save();
+  return newUser;
+};
 
 // Fetch all courses (filtered for content admins by assignedTo email, requires authentication)
 router.get("/", auth, async (req, res) => {
   try {
     let courses;
     if (req.user.role === "content_admin") {
-      // Filter courses where assignedTo matches the content admin's email
-      courses = await CourseModel.find({ assignedTo: req.user.email });
-    } else if (req.user.role === "admin" || req.user.role === "student" || req.user.role === "verification_admin") {
-      // Return all courses for admins and students
+      courses = await CourseModel.find({ contentAdmin: req.user._id });
+    } else if (req.user.role === "verification_admin") {
+      courses = await CourseModel.find({ verificationAdmin: req.user._id });
+    } else if (req.user.role === "admin" || req.user.role === "student") {
       courses = await CourseModel.find();
     } else {
       return res.status(403).json({ message: "Access denied. Invalid role." });
@@ -43,12 +73,14 @@ router.get("/:courseId", async (req, res) => {
 
 // Admin adds a course
 router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
-  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail } = req.body;
+  const {
+    title, description, duration, fee, requirement, contact, subjectCode,
+    contentAdminEmail, contentAdminPassword,
+    verificationAdminEmail, verificationAdminPassword
+  } = req.body;
 
-  // Log the received data for debugging
   console.log("Received course data:", req.body);
 
-  // Validate required fields
   const missingFields = [];
   if (!title?.trim()) missingFields.push("title");
   if (!description?.trim()) missingFields.push("description");
@@ -57,8 +89,10 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
   if (!requirement?.trim()) missingFields.push("requirement");
   if (!contact?.trim()) missingFields.push("contact");
   if (!subjectCode?.trim()) missingFields.push("subjectCode");
-  if (!assignedTo?.trim()) missingFields.push("assignedTo");
-  if (!assignedVerificationAdminEmail?.trim()) missingFields.push("assignedVerificationAdminEmail");
+  if (!contentAdminEmail?.trim()) missingFields.push("contentAdminEmail");
+  if (!contentAdminPassword?.trim()) missingFields.push("contentAdminPassword");
+  if (!verificationAdminEmail?.trim()) missingFields.push("verificationAdminEmail");
+  if (!verificationAdminPassword?.trim()) missingFields.push("verificationAdminPassword");
 
   if (missingFields.length > 0) {
     console.log("Missing or invalid fields:", missingFields);
@@ -68,67 +102,74 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
     });
   }
 
-  try {
-    // Create new course with validated data, omitting programType to use schema default
-    const newCourse = new CourseModel({
-      title: title.trim(),
-      description: description.trim(),
-      duration: Number(duration),
-      fee: Number(fee),
-      requirement: requirement.trim(),
-      contact: contact.trim(),
-      subjectCode: subjectCode.trim(),
-      assignedTo: assignedTo.trim(),
-      assignedVerificationAdminEmail: assignedVerificationAdminEmail.trim(),
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(contentAdminEmail)) missingFields.push("invalid contentAdminEmail format");
+  if (!emailRegex.test(verificationAdminEmail)) missingFields.push("invalid verificationAdminEmail format");
+
+  if (contentAdminPassword.length < 6) missingFields.push("contentAdminPassword too short (min 6 chars)");
+  if (verificationAdminPassword.length < 6) missingFields.push("verificationAdminPassword too short (min 6 chars)");
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      message: "Validation errors",
+      errors: missingFields,
     });
+  }
 
-    // Log the newCourse object to confirm programType is not set
-    console.log("newCourse object before save:", newCourse.toObject());
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Save the course
-    await newCourse.save();
-    console.log("New course saved:", newCourse);
+  try {
+    const tempCourse = new CourseModel({ title: "temp" });
+    const savedTempCourse = await tempCourse.save({ session });
+    const courseId = savedTempCourse._id;
+
+    const contentAdminUser = await createUser(contentAdminEmail, contentAdminPassword, "content_admin", courseId);
+    const verificationAdminUser = await createUser(verificationAdminEmail, verificationAdminPassword, "verification_admin", courseId);
+
+    const updatedCourse = await CourseModel.findByIdAndUpdate(
+      courseId,
+      {
+        title: title.trim(),
+        description: description.trim(),
+        duration: Number(duration),
+        fee: Number(fee),
+        requirement: requirement.trim(),
+        contact: contact.trim(),
+        subjectCode: subjectCode.trim(),
+        contentAdmin: contentAdminUser._id,
+        verificationAdmin: verificationAdminUser._id,
+      },
+      { new: true, session }
+    );
+
+    console.log("New course saved with admins:", updatedCourse);
+
+    await session.commitTransaction();
 
     res.status(201).json({
-      message: "Course added successfully",
-      newCourse,
+      message: "Course added successfully, and admin accounts created/assigned.",
+      course: updatedCourse,
     });
   } catch (error) {
-    console.error("Error adding course:", error);
-    // Log detailed validation errors
-    if (error.name === "ValidationError") {
-      const validationErrors = Object.values(error.errors).map((err) => err.message);
-      console.log("Validation errors:", validationErrors);
-      return res.status(400).json({
-        message: "Validation error",
-        errors: validationErrors,
-      });
-    }
-    // Handle duplicate key errors (e.g., unique subjectCode if enforced)
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Duplicate field value",
-        field: Object.keys(error.keyValue)[0],
-      });
-    }
-    // Generic error
+    await session.abortTransaction();
+    console.error("Error adding course and creating admins:", error);
     res.status(500).json({
-      message: "Error adding course",
+      message: "Error adding course and creating admins",
       error: error.message,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
+  } finally {
+    session.endSession();
   }
 });
 
 // Edit a course (Admin only)
 router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   const { courseId } = req.params;
-  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail } = req.body;
+  const { title, description, duration, fee, requirement, contact, subjectCode } = req.body;
 
-  // Log request body for debugging
   console.log("PUT /api/courses/:courseId - Request Body:", req.body);
 
-  // Check for missing fields
   const missingFields = [];
   if (!title) missingFields.push("title");
   if (!description) missingFields.push("description");
@@ -137,8 +178,6 @@ router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   if (!requirement) missingFields.push("requirement");
   if (!contact) missingFields.push("contact");
   if (!subjectCode) missingFields.push("subjectCode");
-  if (!assignedTo) missingFields.push("assignedTo");
-  if (!assignedVerificationAdminEmail) missingFields.push("assignedVerificationAdminEmail");
 
   if (missingFields.length > 0) {
     console.log("Missing fields:", missingFields);
@@ -148,7 +187,7 @@ router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   try {
     const course = await CourseModel.findByIdAndUpdate(
       courseId,
-      { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail },
+      { title, description, duration, fee, requirement, contact, subjectCode },
       { new: true }
     );
     if (!course) {
@@ -211,16 +250,14 @@ router.post("/:courseId/add-description", auth, authorize(["content_admin"]), as
   }
 
   try {
-    // Verify that the course is assigned to the content admin
     const course = await CourseModel.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
-    if (course.assignedTo !== req.user.email) {
+    if (course.contentAdmin.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Access denied. You are not assigned to this course." });
     }
 
-    // Update course description
     course.programDescription = programDescription;
     course.image1 = image1;
     course.image2 = image2;
@@ -234,7 +271,6 @@ router.post("/:courseId/add-description", auth, authorize(["content_admin"]), as
 
     await course.save();
 
-    // Save or update program type in Form model
     let form = await FormModel.findOne({ courseId });
     if (form) {
       form.programType = programType;
@@ -263,12 +299,14 @@ router.post("/verify-code", auth, authorize(["content_admin"]), async (req, res)
   }
 
   try {
-    // Case-insensitive search for subjectCode
     const course = await CourseModel.findOne({
       subjectCode: { $regex: `^${subjectCode}$`, $options: "i" }
     });
     if (!course) {
       return res.status(404).json({ message: "Invalid course code" });
+    }
+    if (course.contentAdmin.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Access denied. You are not the content admin for this course." });
     }
 
     res.status(200).json({ courseId: course._id });

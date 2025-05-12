@@ -8,53 +8,173 @@ const { auth, authorize } = require("../middleware/auth");
 
 const router = express.Router();
 
-// Helper function to create a user
-const createUser = async (email, password, role, courseId, session) => {
-  let existingUser = await UserModel.findOne({ email }).session(session); // Use let to allow reassignment if needed for clarity, though not strictly necessary here
+// Helper function to create or update a user and assign them a role for a specific course
+const createUser = async (email, password, roleToAssign, courseId, session) => {
+  console.log(`[createUser] Called with Email: ${email}, RoleToAssign: ${roleToAssign}, CourseID: ${courseId}`);
+  let user = await UserModel.findOne({ email }).session(session);
 
-  if (existingUser) {
-    // User exists. Crucially, update their role to the one being assigned for this context.
-    // This ensures that if a main admin email is used, their role is effectively scoped
-    // to content_admin or verification_admin for course-specific tasks.
-    existingUser.role = role;
+  if (user) {
+    console.log(`[createUser] Existing user found: ${email}. Current Role: ${user.role}. Current Courses: ${user.courses.join(', ')}`);
+    // Update the user's role to the one being assigned for this course context.
+    // This is critical for ensuring their permissions are scoped correctly later.
+    user.role = roleToAssign;
+    user.verified = true; // Ensure users assigned these roles are marked as verified.
 
-    if (!existingUser.courses.includes(courseId)) {
-      existingUser.courses.push(courseId);
+    // Add course to user's list if not already present
+    if (!user.courses.map(String).includes(String(courseId))) {
+      user.courses.push(courseId);
+      console.log(`[createUser] Added CourseID ${courseId} to user ${email}.`);
+    } else {
+      console.log(`[createUser] CourseID ${courseId} already in user ${email}'s list.`);
     }
-    // Ensure users assigned these specific admin roles are marked as verified.
-    if (role === 'content_admin' || role === 'verification_admin') {
-      existingUser.verified = true;
+
+    console.log(`[createUser] Attempting to save existing user ${email} with New Role: ${user.role}, Courses: ${user.courses.join(', ')}`);
+    try {
+      await user.save({ session });
+      console.log(`[createUser] Successfully saved existing user ${email}.`);
+    } catch (saveError) {
+      console.error(`[createUser] Error saving existing user ${email}:`, saveError);
+      throw saveError; // Propagate error to abort transaction
     }
-    await existingUser.save({ session });
-    return existingUser;
   } else {
-    // New user: hash password and create
+    console.log(`[createUser] No existing user found for ${email}. Creating new user.`);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const newUser = new UserModel({
+    user = new UserModel({
       name: email.split('@')[0], // Basic name generation
       email,
       password: hashedPassword,
-      role, // Set the role for the new user
-      courses: [courseId], // Assign only the current courseId
-      verified: true, // Admins created this way are pre-verified by default
+      role: roleToAssign,
+      courses: [courseId],
+      verified: true, // New admins are verified by default
     });
-    await newUser.save({ session });
-    return newUser;
+    console.log(`[createUser] Attempting to save new user ${email} with Role: ${user.role}, Courses: ${user.courses.join(', ')}`);
+    try {
+      await user.save({ session });
+      console.log(`[createUser] Successfully saved new user ${email}.`);
+    } catch (saveError) {
+      console.error(`[createUser] Error saving new user ${email}:`, saveError);
+      throw saveError; // Propagate error to abort transaction
+    }
   }
+  return user;
 };
+
+// Admin adds a new course and assigns Content Admin and Verification Admin
+router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
+  console.log("[POST /newCourse] Received request. Body:", req.body);
+  const {
+    title, description, duration, fee, requirement, contact, subjectCode,
+    contentAdminEmail, contentAdminPassword,
+    verificationAdminEmail, verificationAdminPassword,
+    // Optional fields from CourseModel
+    details, programDescription, image1, image2, vision, mission,
+    yearsOfDepartment, syllabus, programEducationalObjectives, programOutcomes, programType
+  } = req.body;
+
+  // Basic Validation (ensure this is comprehensive as per your needs)
+  const requiredFields = { title, description, duration, fee, requirement, contact, subjectCode, contentAdminEmail, contentAdminPassword, verificationAdminEmail, verificationAdminPassword };
+  for (const [field, value] of Object.entries(requiredFields)) {
+    if (!value || (typeof value === 'string' && !value.trim())) {
+      console.log(`[POST /newCourse] Validation Error: Missing or empty required field: ${field}`);
+      return res.status(400).json({ message: `Field '${field}' is required.` });
+    }
+  }
+  // Add more specific validation for email format, password length, numeric types, etc. if not already handled robustly on frontend
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  console.log("[POST /newCourse] MongoDB session started and transaction begun.");
+
+  try {
+    // 1. Prepare Course Data (excluding admin IDs for now)
+    const courseData = {
+      title: title.trim(),
+      description: description.trim(),
+      duration: Number(duration),
+      fee: Number(fee),
+      requirement: requirement.trim(),
+      contact: contact.trim(),
+      subjectCode: subjectCode.trim(),
+      // Optional fields
+      details: details?.trim(),
+      programDescription: programDescription?.trim(),
+      image1: image1?.trim(),
+      image2: image2?.trim(),
+      vision: vision?.trim(),
+      mission: mission?.trim(),
+      yearsOfDepartment: yearsOfDepartment ? Number(yearsOfDepartment) : undefined,
+      syllabus: syllabus,
+      programEducationalObjectives: programEducationalObjectives,
+      programOutcomes: programOutcomes,
+      programType: programType?.trim()
+    };
+    // Remove undefined optional fields
+    Object.keys(courseData).forEach(key => courseData[key] === undefined && delete courseData[key]);
+
+    // 2. Create and Save Initial Course Document (to get its _id)
+    const newCourse = new CourseModel(courseData);
+    await newCourse.save({ session });
+    const courseId = newCourse._id;
+    console.log(`[POST /newCourse] Initial course document saved. CourseID: ${courseId}`);
+
+    // 3. Create/Update Content Admin User
+    console.log(`[POST /newCourse] Processing Content Admin: ${contentAdminEmail}`);
+    const contentAdminUser = await createUser(contentAdminEmail, contentAdminPassword, "content_admin", courseId, session);
+    console.log(`[POST /newCourse] Content Admin user processed. UserID: ${contentAdminUser._id}, Role: ${contentAdminUser.role}`);
+
+    // 4. Create/Update Verification Admin User
+    console.log(`[POST /newCourse] Processing Verification Admin: ${verificationAdminEmail}`);
+    const verificationAdminUser = await createUser(verificationAdminEmail, verificationAdminPassword, "verification_admin", courseId, session);
+    console.log(`[POST /newCourse] Verification Admin user processed. UserID: ${verificationAdminUser._id}, Role: ${verificationAdminUser.role}`);
+
+    // 5. Update Course Document with Admin ObjectIds
+    newCourse.contentAdmin = contentAdminUser._id;
+    newCourse.verificationAdmin = verificationAdminUser._id;
+    console.log(`[POST /newCourse] Attempting to save course with admin IDs. ContentAdminID: ${newCourse.contentAdmin}, VerificationAdminID: ${newCourse.verificationAdmin}`);
+    const finalCourse = await newCourse.save({ session });
+    console.log(`[POST /newCourse] Course successfully updated with admin IDs.`);
+
+    // 6. Commit Transaction
+    await session.commitTransaction();
+    console.log("[POST /newCourse] Transaction committed successfully.");
+
+    res.status(201).json({
+      message: "Course created and admins assigned successfully.",
+      course: finalCourse,
+    });
+
+  } catch (error) {
+    console.error("[POST /newCourse] Error during course creation:", error);
+    await session.abortTransaction();
+    console.log("[POST /newCourse] Transaction aborted due to error.");
+    // Provide more specific error messages based on error type if possible
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation error during save.", error: error.message, details: error.errors });
+    }
+    res.status(500).json({ message: "Failed to create course.", error: error.message });
+  } finally {
+    await session.endSession();
+    console.log("[POST /newCourse] MongoDB session ended.");
+  }
+});
 
 // Fetch all courses (filtered for content admins by assignedTo email, requires authentication)
 router.get("/", auth, async (req, res) => {
+  console.log("[GET /api/courses] User making request:", JSON.stringify(req.user)); // Log the user object
   try {
     let courses;
     if (req.user.role === "content_admin") {
+      console.log(`[GET /api/courses] User role is content_admin. Fetching courses assigned to contentAdmin: ${req.user._id}`);
       courses = await CourseModel.find({ contentAdmin: req.user._id });
     } else if (req.user.role === "verification_admin") {
+      console.log(`[GET /api/courses] User role is verification_admin. Fetching courses assigned to verificationAdmin: ${req.user._id}`);
       courses = await CourseModel.find({ verificationAdmin: req.user._id });
     } else if (req.user.role === "admin" || req.user.role === "student") {
+      console.log(`[GET /api/courses] User role is ${req.user.role}. Fetching all courses.`);
       courses = await CourseModel.find();
     } else {
+      console.log(`[GET /api/courses] User role ${req.user.role} has no specific course view. Access denied.`);
       return res.status(403).json({ message: "Access denied. Invalid role." });
     }
     res.json(courses);
@@ -77,120 +197,6 @@ router.get("/:courseId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching course:", error);
     res.status(500).json({ message: "Error fetching course", error: error.message });
-  }
-});
-
-// Admin adds a course
-router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
-  const {
-    title, description, duration, fee, requirement, contact, subjectCode,
-    contentAdminEmail, contentAdminPassword,
-    verificationAdminEmail, verificationAdminPassword,
-    details, programDescription, image1, image2, vision, mission,
-    yearsOfDepartment, syllabus, programEducationalObjectives, programOutcomes, programType
-  } = req.body;
-
-  console.log("Received course data:", req.body);
-
-  const missingFields = [];
-  if (!title?.trim()) missingFields.push("title");
-  if (!description?.trim()) missingFields.push("description");
-  if (!duration || isNaN(duration) || Number(duration) <= 0) missingFields.push("duration");
-  if (!fee || isNaN(fee) || Number(fee) <= 0) missingFields.push("fee");
-  if (!requirement?.trim()) missingFields.push("requirement");
-  if (!contact?.trim()) missingFields.push("contact");
-  if (!subjectCode?.trim()) missingFields.push("subjectCode");
-  if (!contentAdminEmail?.trim()) missingFields.push("contentAdminEmail");
-  if (!contentAdminPassword?.trim()) missingFields.push("contentAdminPassword");
-  if (!verificationAdminEmail?.trim()) missingFields.push("verificationAdminEmail");
-  if (!verificationAdminPassword?.trim()) missingFields.push("verificationAdminPassword");
-
-  if (missingFields.length > 0) {
-    console.log("Missing or invalid fields:", missingFields);
-    return res.status(400).json({
-      message: "All fields are required",
-      missingFields,
-    });
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const validationErrors = [];
-  if (!emailRegex.test(contentAdminEmail)) validationErrors.push("invalid contentAdminEmail format");
-  if (!emailRegex.test(verificationAdminEmail)) validationErrors.push("invalid verificationAdminEmail format");
-
-  if (contentAdminPassword.length < 6) validationErrors.push("contentAdminPassword too short (min 6 chars)");
-  if (verificationAdminPassword.length < 6) validationErrors.push("verificationAdminPassword too short (min 6 chars)");
-
-  if (validationErrors.length > 0) {
-    return res.status(400).json({
-      message: "Validation errors",
-      errors: validationErrors,
-    });
-  }
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const courseData = {
-      title: title.trim(),
-      description: description.trim(),
-      duration: Number(duration),
-      fee: Number(fee),
-      requirement: requirement.trim(),
-      contact: contact.trim(),
-      subjectCode: subjectCode.trim(),
-      details: details?.trim(),
-      programDescription: programDescription?.trim(),
-      image1: image1?.trim(),
-      image2: image2?.trim(),
-      vision: vision?.trim(),
-      mission: mission?.trim(),
-      yearsOfDepartment: yearsOfDepartment ? Number(yearsOfDepartment) : undefined,
-      syllabus: syllabus,
-      programEducationalObjectives: programEducationalObjectives,
-      programOutcomes: programOutcomes,
-      programType: programType?.trim()
-    };
-
-    Object.keys(courseData).forEach(key => courseData[key] === undefined && delete courseData[key]);
-
-    const initialCourse = new CourseModel(courseData);
-    const savedCourse = await initialCourse.save({ session });
-    const courseId = savedCourse._id;
-
-    const contentAdminUser = await createUser(contentAdminEmail, contentAdminPassword, "content_admin", courseId, session);
-    const verificationAdminUser = await createUser(verificationAdminEmail, verificationAdminPassword, "verification_admin", courseId, session);
-
-    savedCourse.contentAdmin = contentAdminUser._id;
-    savedCourse.verificationAdmin = verificationAdminUser._id;
-
-    const finalCourse = await savedCourse.save({ session });
-
-    console.log("New course saved with admins:", finalCourse);
-
-    await session.commitTransaction();
-
-    res.status(201).json({
-      message: "Course added successfully, and admin accounts created/assigned.",
-      course: finalCourse,
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    console.error("Error adding course and creating admins:", error);
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        message: "Validation error while saving course.",
-        error: error.message,
-        details: error.errors
-      });
-    }
-    res.status(500).json({
-      message: "Error adding course and creating admins",
-      error: error.message,
-    });
-  } finally {
-    session.endSession();
   }
 });
 
@@ -251,6 +257,7 @@ router.delete("/:courseId", auth, authorize(["admin"]), async (req, res) => {
 
 // Content admin adds course description and program type
 router.post("/:courseId/add-description", auth, authorize(["content_admin"]), async (req, res) => {
+  console.log(`[/:courseId/add-description] User making request: ${JSON.stringify(req.user)}, Course ID: ${req.params.courseId}`);
   const { courseId } = req.params;
   const {
     programDescription,
@@ -286,6 +293,7 @@ router.post("/:courseId/add-description", auth, authorize(["content_admin"]), as
       return res.status(404).json({ message: "Course not found" });
     }
     if (course.contentAdmin.toString() !== req.user._id.toString()) {
+      console.log(`[/:courseId/add-description] Access Denied. Course ContentAdmin: ${course.contentAdmin}, User ID: ${req.user._id}`);
       return res.status(403).json({ message: "Access denied. You are not assigned to this course." });
     }
 
@@ -323,6 +331,7 @@ router.post("/:courseId/add-description", auth, authorize(["content_admin"]), as
 
 // Verify course code (Content Admin only)
 router.post("/verify-code", auth, authorize(["content_admin"]), async (req, res) => {
+  console.log(`[verify-code] User making request: ${JSON.stringify(req.user)}, Subject Code: ${req.body.subjectCode}`);
   const { subjectCode } = req.body;
 
   if (!subjectCode) {
@@ -337,6 +346,7 @@ router.post("/verify-code", auth, authorize(["content_admin"]), async (req, res)
       return res.status(404).json({ message: "Invalid course code" });
     }
     if (course.contentAdmin.toString() !== req.user._id.toString()) {
+      console.log(`[verify-code] Access Denied. Course ContentAdmin: ${course.contentAdmin}, User ID: ${req.user._id}`);
       return res.status(403).json({ message: "Access denied. You are not the content admin for this course." });
     }
 

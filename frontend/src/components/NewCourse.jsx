@@ -14,6 +14,7 @@ const NewCourse = () => {
     contact: "",
     subjectCode: "",
     assignedTo: "", // New field
+    assignedVerificationAdminEmail: "", // New field for Verification Admin
   });
   const [errors, setErrors] = useState({});
   const [user, setUser] = useState(null);
@@ -50,6 +51,7 @@ const NewCourse = () => {
     if (!courseData.contact.trim()) newErrors.contact = "Contact Details are required";
     if (!courseData.subjectCode.trim()) newErrors.subjectCode = "Subject Code is required";
     if (!courseData.assignedTo.trim()) newErrors.assignedTo = "Assigned Content Admin email is required";
+    if (!courseData.assignedVerificationAdminEmail.trim()) newErrors.assignedVerificationAdminEmail = "Assigned Verification Admin email is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -78,6 +80,7 @@ const NewCourse = () => {
       contact: courseData.contact,
       subjectCode: courseData.subjectCode,
       assignedTo: courseData.assignedTo,
+      assignedVerificationAdminEmail: courseData.assignedVerificationAdminEmail,
     };
 
     try {
@@ -194,6 +197,15 @@ const NewCourse = () => {
           required
         />
         {errors.assignedTo && <div className="error">{errors.assignedTo}</div>}
+        <input
+          type="email"
+          name="assignedVerificationAdminEmail"
+          placeholder="Assigned Verification Admin Email"
+          value={courseData.assignedVerificationAdminEmail}
+          onChange={handleChange}
+          required
+        />
+        {errors.assignedVerificationAdminEmail && <div className="error">{errors.assignedVerificationAdminEmail}</div>}
         <button type="submit">Add Course</button>
       </form>
     </div>

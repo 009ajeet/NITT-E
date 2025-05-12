@@ -43,7 +43,7 @@ router.get("/:courseId", async (req, res) => {
 
 // Admin adds a course
 router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
-  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo } = req.body;
+  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail } = req.body;
 
   // Log the received data for debugging
   console.log("Received course data:", req.body);
@@ -58,6 +58,7 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
   if (!contact?.trim()) missingFields.push("contact");
   if (!subjectCode?.trim()) missingFields.push("subjectCode");
   if (!assignedTo?.trim()) missingFields.push("assignedTo");
+  if (!assignedVerificationAdminEmail?.trim()) missingFields.push("assignedVerificationAdminEmail");
 
   if (missingFields.length > 0) {
     console.log("Missing or invalid fields:", missingFields);
@@ -78,6 +79,7 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
       contact: contact.trim(),
       subjectCode: subjectCode.trim(),
       assignedTo: assignedTo.trim(),
+      assignedVerificationAdminEmail: assignedVerificationAdminEmail.trim(),
     });
 
     // Log the newCourse object to confirm programType is not set
@@ -121,7 +123,7 @@ router.post("/newCourse", auth, authorize(["admin"]), async (req, res) => {
 // Edit a course (Admin only)
 router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   const { courseId } = req.params;
-  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo } = req.body;
+  const { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail } = req.body;
 
   // Log request body for debugging
   console.log("PUT /api/courses/:courseId - Request Body:", req.body);
@@ -136,6 +138,7 @@ router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   if (!contact) missingFields.push("contact");
   if (!subjectCode) missingFields.push("subjectCode");
   if (!assignedTo) missingFields.push("assignedTo");
+  if (!assignedVerificationAdminEmail) missingFields.push("assignedVerificationAdminEmail");
 
   if (missingFields.length > 0) {
     console.log("Missing fields:", missingFields);
@@ -145,7 +148,7 @@ router.put("/:courseId", auth, authorize(["admin"]), async (req, res) => {
   try {
     const course = await CourseModel.findByIdAndUpdate(
       courseId,
-      { title, description, duration, fee, requirement, contact, subjectCode, assignedTo },
+      { title, description, duration, fee, requirement, contact, subjectCode, assignedTo, assignedVerificationAdminEmail },
       { new: true }
     );
     if (!course) {
@@ -261,7 +264,7 @@ router.post("/verify-code", auth, authorize(["content_admin"]), async (req, res)
 
   try {
     // Case-insensitive search for subjectCode
-    const course = await CourseModel.findOne({ 
+    const course = await CourseModel.findOne({
       subjectCode: { $regex: `^${subjectCode}$`, $options: "i" }
     });
     if (!course) {

@@ -10,6 +10,7 @@ const courseSchema = new mongoose.Schema({
   requirement: { type: String, required: true },
   subjectCode: { type: String, required: true },
   assignedTo: { type: String, required: true }, // New field for content admin email
+  assignedVerificationAdminEmail: { type: String, required: true }, // New field for verification admin email
   programDescription: { type: String },
   image1: { type: String },
   image2: { type: String },
@@ -26,7 +27,7 @@ const courseSchema = new mongoose.Schema({
   programOutcomes: [{ type: String }],
   programType: {
     type: String,
-    enum: ["UG", "PG",null],
+    enum: ["UG", "PG", null],
     default: null,
   },
 });
